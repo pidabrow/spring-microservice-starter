@@ -24,8 +24,6 @@ subprojects {
     }
 
     dependencies {
-        // Common test dependencies
-        val implementation by configurations
         val testImplementation by configurations
         
         testImplementation("org.springframework.boot:spring-boot-starter-test")

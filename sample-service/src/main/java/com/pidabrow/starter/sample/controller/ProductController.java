@@ -43,14 +43,19 @@ public class ProductController {
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {
         return productService.findById(id)
                 .map(existingProduct -> {
-                    product.setId(id);
-                    return ResponseEntity.ok(productService.save(product));
+                    existingProduct.setName(product.getName());
+                    existingProduct.setDescription(product.getDescription());
+                    existingProduct.setPrice(product.getPrice());
+                    return ResponseEntity.ok(productService.save(existingProduct));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+        if (!productService.findById(id).isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
         productService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
