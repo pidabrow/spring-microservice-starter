@@ -11,8 +11,6 @@ This project provides a foundation for building microservices with Spring Boot 3
 - **Java**: 21
 - **Spring Boot**: 3.2.0
 - **Build Tool**: Gradle 8.5 (Kotlin DSL)
-- **Database**: PostgreSQL (production), H2 (testing)
-- **ORM**: JPA/Hibernate
 
 ## Project Structure
 
@@ -32,10 +30,7 @@ spring-microservice-starter/
 │       └── exception/        # Global exception handlers
 └── sample-service/           # Sample microservice implementation
     └── src/main/java/com/pidabrow/starter/sample/
-        ├── controller/       # REST controllers
-        ├── entity/           # Domain entities
-        ├── repository/       # JPA repositories
-        └── service/          # Business logic
+        └── controller/       # REST controllers
 ```
 
 ## Modules
@@ -61,16 +56,13 @@ REST API and web layer:
 ### sample-service
 Example microservice demonstrating the platform usage:
 - Main application class: `MicroserviceStarterApplication`
-- Product entity with CRUD operations
-- REST API endpoints for product management
-- PostgreSQL database integration
+- Simple HelloController returning "Hello World"
 
 ## Getting Started
 
 ### Prerequisites
 
 - Java 21
-- PostgreSQL (for running the application)
 
 ### Build the Project
 
@@ -86,9 +78,7 @@ Example microservice demonstrating the platform usage:
 
 ### Run the Sample Service
 
-1. Ensure PostgreSQL is running and accessible at `localhost:5432`
-2. Create a database named `microservice_db`
-3. Run the application:
+Run the application:
 
 ```bash
 ./gradlew :sample-service:bootRun
@@ -96,27 +86,11 @@ Example microservice demonstrating the platform usage:
 
 The service will start on port 8080.
 
-### Configuration
-
-Database configuration can be found in `sample-service/src/main/resources/application.yml`:
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/microservice_db
-    username: postgres
-    password: postgres
-```
-
 ## API Endpoints
 
-The sample service exposes the following REST endpoints:
+The sample service exposes a simple hello world endpoint:
 
-- `GET /api/products` - Get all products
-- `GET /api/products/{id}` - Get product by ID
-- `POST /api/products` - Create a new product
-- `PUT /api/products/{id}` - Update a product
-- `DELETE /api/products/{id}` - Delete a product
+- `GET /` - Returns "Hello World"
 
 ## Package Structure
 
