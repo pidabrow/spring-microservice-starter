@@ -18,8 +18,7 @@ This project provides a foundation for building microservices with Spring Boot 3
 spring-microservice-starter/
 ├── platform-common/          # Shared utilities and common code
 │   └── src/main/java/com/pidabrow/starter/common/
-│       ├── exception/        # Common exception classes
-│       └── util/             # Utility classes
+│       └── exception/        # Common exception classes
 ├── platform-data/            # JPA/Hibernate and database configurations
 │   └── src/main/java/com/pidabrow/starter/data/
 │       ├── config/           # Data layer configuration
@@ -38,7 +37,6 @@ spring-microservice-starter/
 ### platform-common
 Shared utilities and common code used across all services:
 - Common exception classes
-- Utility functions
 - Shared constants
 
 ### platform-data
@@ -91,6 +89,16 @@ The service will start on port 8080.
 The sample service exposes a simple hello world endpoint:
 
 - `GET /` - Returns "Hello World"
+
+## CI/CD
+
+The project includes a GitHub Actions CI pipeline that:
+- Runs on push and pull requests to `main` and `develop` branches
+- Sets up Java 21 with Temurin distribution
+- Builds the project using Gradle
+- Executes all tests
+
+See `.github/workflows/ci.yml` for the pipeline configuration.
 
 ## Package Structure
 
