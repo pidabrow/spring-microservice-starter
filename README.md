@@ -93,7 +93,7 @@ The sample service exposes a simple hello world endpoint:
 ## CI/CD
 
 The project includes a GitHub Actions CI pipeline that:
-- Runs on push and pull requests to `main` and `develop` branches
+- Runs on all push and pull request events
 - Sets up Java 21 with Temurin distribution
 - Builds the project using Gradle
 - Executes all tests
