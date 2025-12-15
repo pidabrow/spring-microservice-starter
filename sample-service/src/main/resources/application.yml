@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: sample-service
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.pidabrow.starter: INFO
+    org.springframework.web: INFO
