@@ -24,7 +24,7 @@ echo "=== Checking Java ==="
 JAVA_OK=0
 if command -v java >/dev/null 2>&1; then
   if java -version >/dev/null 2>&1; then
-    echo "JAVA: OK (działa 'java -version')"
+    echo "JAVA: OK ('java -version' works)"
     java -version
     JAVA_OK=1
   fi
@@ -103,9 +103,9 @@ fi
 
 echo
 if [ "${OVERALL_STATUS}" -eq 0 ]; then
-  echo "=== Podsumowanie: wszystkie narzędzia wyglądają na sprawne. ==="
+  echo "=== Summary: all tools appear to be working correctly. ==="
 else
-  echo "=== Podsumowanie: wykryto problemy (szczegóły powyżej). Kod wyjścia: ${OVERALL_STATUS} ==="
+  echo "=== Summary: issues detected (see details above). Exit code: ${OVERALL_STATUS} ==="
 fi
 
 exit "${OVERALL_STATUS}"
