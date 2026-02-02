@@ -2,11 +2,10 @@
 
 ## Purpose
 
-This repository contains an **opinionated Spring Boot microservice starter**.
-Its goal is to demonstrate architectural decision-making and reusable foundations,
-not feature richness.
+This repository contains an **opinionated, high-performance Spring Boot microservice starter**.
+Its goal is to demonstrate architectural excellence using **Modern Java (21+)**, **Strict Immutability**, and **Hexagonal Principles**.
 
-It is intended to be **forked, trimmed, and adapted**.
+It is intended to be **forked, trimmed, and adapted** while maintaining a zero-compromise approach to code quality.
 
 ---
 
@@ -14,57 +13,47 @@ It is intended to be **forked, trimmed, and adapted**.
 
 This is a **monorepo** consisting of:
 
-- **platform modules** — reusable building blocks
-- **sample service** — minimal reference implementation
+- **platform modules** — reusable building blocks (infrastructure, security, auditing).
+- **sample service** — minimal reference implementation of business logic.
 
 Dependency direction is strictly one-way:
+`sample service → platform modules`
 
-sample service → platform modules
-
-Platform modules must never depend on the sample service.
+**Encapsulation Rule**: Implementations within modules (especially adapters) MUST be `package-private`. Public access is strictly reserved for Ports and DTOs to prevent "architectural leaking".
 
 ---
 
-## Architectural Style: Lightweight Hexagonal Architecture
+## Architectural Style: Strict Hexagonal Architecture
 
-This codebase follows a **lightweight hexagonal architecture (Ports & Adapters)**.
-The purpose is to enforce clear boundaries without introducing excessive ceremony.
+We follow a **Ports & Adapters** pattern with a "Golden Circle" domain.
 
 ### Core ideas
-- **Inbound adapters** (e.g., REST controllers) call **inbound ports** (use cases).
-- **Inbound ports** contain application orchestration and transactions.
-- **Outbound ports** define required capabilities (persistence, audit sink, etc.).
-- **Outbound adapters** implement those ports (JPA repositories, audit listeners, etc.).
-- The domain and application layers must not depend on Spring or infrastructure details.
+- **Inbound adapters** (e.g., REST controllers) map external requests to Use Cases.
+- **Inbound ports** (Use Cases) orchestrate business flow, manage transactions, and publish events.
+- **Domain Layer**: The heart of the system. It contains pure business logic, is **entirely immutable**, and has **zero dependencies** on Spring or any external library.
+- **Outbound ports**: Interfaces defining side effects (persistence, external APIs).
+- **Outbound adapters**: Concrete implementations (JPA, Mailer, etc.) that depend inward.
 
 ---
 
 ## Architectural Principles
 
-- Opinionated over configurable
-- Explicit over implicit
-- Simplicity over completeness
-- Boundaries enforced through Ports & Adapters
-- Architecture documented via ADRs
-
-Significant decisions are documented in `/docs/adr`.
+- **Immutability by Default**: Domain entities and DTOs MUST use Java Records or final fields.
+- **No Persistence Leaking**: JPA entities are implementation details of the persistence adapter and NEVER reach the Domain or Application layers.
+- **Explicit over implicit**: We avoid "magic" (like broad AOP or auto-proxying) in favor of readable, traceable code.
+- **Boundaries enforced through Code**: We don't just "hope" people follow the rules; we enforce them via ArchUnit.
 
 ---
 
-## Domain Model
+## Domain Model & State Management
 
-The domain is intentionally small to keep architectural decisions visible.
+The domain is immutable. State transitions do not happen via setters.
 
 Core entities:
-
-- **Tenant**
-  Root of data isolation (soft multi-tenancy)
-
-- **User**
-  Identity within a tenant
-
-- **Notification**
-  Business entity associated with a user
+- **Tenant**: Root of data isolation (soft multi-tenancy).
+- **User**: Identity within a tenant.
+- **Notification**: Business entity associated with a user.
+- **AuditLog**: Append-only record of changes.
 
 - **AuditLog**
   Append-only audit trail
@@ -76,37 +65,20 @@ Architecture, not business logic, is the focus of this repository.
 
 ## Soft Multi-Tenancy
 
-The system uses **soft multi-tenancy**:
-
-- single database
-- single schema
-- logical isolation via `tenant_id`
-
-Rules:
-
-- `tenant_id` exists in every entity except `Tenant`
-- `tenant_id` represents a **security boundary**
-- tenant isolation must NOT rely on joins or ad-hoc filtering
-
-Tenant context is resolved per request and propagated explicitly.
-
-See ADR-002 for details.
+- **Logical Isolation**: Every entity (except `Tenant`) contains a `tenant_id`.
+- **Security Boundary**: Tenant context is resolved once at the edge (Inbound Adapter) and propagated via a secure, immutable context.
+- **No Ad-hoc Filtering**: Isolation is handled at the persistence layer level to prevent developers from "forgetting" a WHERE clause.
 
 ---
 
 ## Event-Driven Design
 
-Business actions publish **application-level events** from the application layer.
-
-Events are:
-- explicit, business-named classes
-- published intentionally from use cases (inbound ports)
-- not derived from persistence callbacks or generic hooks
-
-Cross-cutting concerns (e.g., auditing) react to events to avoid coupling.
+Business actions publish **Application Events** after a successful transaction commit.
+- Events are **Java Records**.
+- Publishing is intentional and explicit from the Use Case layer.
+- Auditing and other cross-cutting concerns react to these events to keep the core logic clean.
 
 ---
-ś
 ## Auditing
 
 Auditing is **event-driven and append-only**:
@@ -115,19 +87,24 @@ Auditing is **event-driven and append-only**:
 - records capture tenant, actor, request context, and change deltas
 - sensitive fields must be masked
 
-See ADR-003 for auditing details.
+---
+
+## Automated Governance (Architecture-as-Code)
+
+This project uses **ArchUnit** to ensure that:
+1. The Domain layer remains "pure" (no imports from `infrastructure` or `spring`).
+2. No public setters are added to JPA entities or Domain objects.
+3. Adapters stay `package-private`.
+4. Dependency directions are never violated.
 
 ---
 
 ## What This Project Avoids
 
-This project intentionally avoids:
-
-- framework-building and over-abstraction
-- excessive configurability
-- hidden magic (JPA interceptors, broad AOP)
-- non-essential features in the starter baseline
-- “hexagonal ceremony” (ports everywhere without value)
+- **Lombok (where Records suffice)**: We prefer native Java 21 features.
+- We do not treat JPA entities as our primary domain model.
+- **Excessive Ceremony**: We don't create ports for things that don't need abstraction, but we never skip them where boundaries are required.
+- **Hidden Magic**: No persistence callbacks (`@PostPersist`) for business logic.
 
 ---
 
@@ -135,4 +112,4 @@ This project intentionally avoids:
 
 - Architecture entry point: `/architecture.md`
 - Architectural decisions: `/docs/adr`
-- AI coding rules: `/.cursor/rules/*.mdc`
+- AI/Cursor coding rules: `/.cursor/rules/*.mdc`

@@ -49,3 +49,4 @@ Rule:
 
 ## Documentation
 - New modules require an update to `/architecture.md`
+- **Architecture as Code**: Use ArchUnit to enforce these boundaries in every build.

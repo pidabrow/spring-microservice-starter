@@ -1,14 +1,15 @@
 ---
-description: Java and Spring Boot coding standards (Hex-friendly)
+description: Java and Spring Boot coding standards (Hex-friendly + Java 21)
 alwaysApply: true
 ---
 
 # Java & Spring Boot Standards
 
-## Spring Boot baseline
-- Spring Boot 3.x, Java 21
-- Prefer constructor injection
-- No field injection
+## Spring Boot & Java 21 baseline
+- Spring Boot 3.x, Java 21.
+- **Modern Java**: Use Pattern Matching for `switch`, Sealed Interfaces for domain events, and Records for DTOs/Value Objects.
+- Prefer constructor injection.
+- No field injection.
 
 ## Hexagonal discipline
 - Controllers (inbound adapters) only: validation, mapping, calling inbound ports
@@ -19,9 +20,11 @@ alwaysApply: true
 ## REST API
 - Use explicit request/response DTOs
 - Never expose JPA entities directly from controllers
+- **Error Handling**: Use `Result<T>` or `Either` pattern for business failures instead of throwing checked exceptions in the domain.
 - Keep error responses consistent and explicit
 
 ## Avoid
 - Generic abstractions
 - Broad AOP
 - Persistence callbacks as business triggers
+- **Nulls**: Use `Optional` for return types; use `@NonNullApi` for packages.

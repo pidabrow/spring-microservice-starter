@@ -5,6 +5,12 @@ alwaysApply: true
 
 # Data & JPA Rules
 
+## Immutability & State Management (L10 Standard)
+- **Domain Immutability**: Domain models MUST be immutable. State changes return new instances.
+- **No Public Setters**: JPA entities MUST NOT have public setters. Use purposeful business methods (e.g., `deactivate()`).
+- **Collections**: Always wrap collections in `Collections.unmodifiableList()` or similar when exposing them.
+- **Records for Projections**: Use Java Records for all read-only queries (CQRS light). Never stream entities to the application layer for read-only purposes.
+
 ## Soft multi-tenancy
 - Every entity except `Tenant` MUST contain `tenantId`
 - Tenant isolation must NOT rely on joins

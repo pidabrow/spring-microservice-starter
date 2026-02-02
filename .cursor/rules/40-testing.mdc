@@ -30,6 +30,11 @@ Tests are mandatory unless explicitly exempted by change classification.
   - Integration tests for persistence, migrations, multi-tenancy
   - Web tests for REST API changes
 
+## Test Types & Levels
+- **Domain/Use Case**: Unit tests (Socialized, focused on behavior).
+- **Persistence/Multi-tenancy**: Integration tests with Testcontainers.
+- **Architecture**: **ArchUnit tests** are mandatory to verify Hexagonal boundaries and Immutability rules.
+
 ## Quality rules
 - Tests must be deterministic
 - Fix flaky tests; never mute them
