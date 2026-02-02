@@ -1,0 +1,51 @@
+---
+description: Monorepo structure and dependency boundaries (Hexagonal)
+alwaysApply: true
+---
+
+# Repository Structure Rules (Hexagonal)
+
+## Modules
+- Sample service depends on platform modules
+- Platform modules must NEVER depend on the sample service
+- Avoid generic "utils/common" dumping grounds
+
+---
+
+## Hexagonal boundaries (sample service)
+Organize code as Ports & Adapters:
+
+### Inbound adapters
+- `api` (REST controllers, request/response DTOs)
+
+### Inbound ports (application)
+- `application.port.in` (use case interfaces, if useful)
+- `application.usecase` (implementations, orchestration, transactions, event publishing)
+
+### Domain
+- `domain` (entities, domain rules; avoid Spring dependencies)
+
+### Outbound ports
+- `application.port.out` (persistence ports, audit ports, etc.)
+
+### Outbound adapters
+- `infrastructure.persistence` (JPA implementations)
+- `infrastructure.events` (listeners, event wiring)
+- `infrastructure.*` (external integrations)
+
+Rule:
+- Inbound ports must not depend on inbound adapters.
+- Domain must not depend on adapters.
+- Adapters depend inward; never the reverse.
+
+---
+
+## Naming
+- Root package: `com.pidabrow.starter`
+- Avoid generic class names (`Application`, `ServiceImpl`, `Utils`)
+- Prefer descriptive names (`CreateUserUseCase`, `TenantContext`, `AuditEventListener`)
+
+---
+
+## Documentation
+- New modules require an update to `/architecture.md`

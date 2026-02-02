@@ -1,0 +1,19 @@
+---
+description: Security, privacy, and sensitive data rules
+alwaysApply: true
+---
+
+# Security & Privacy Rules
+
+## Secrets
+- Never commit secrets
+- Never hardcode credentials or tokens
+- Use environment variables for local and CI usage
+
+## PII & Logging
+- Do not log emails, tokens, or secrets
+- Audit logs must support masking of sensitive fields
+
+## Auth scaffolding
+- Keep auth minimal until defined by ADR
+- No insecure shortcuts or temporary bypasses

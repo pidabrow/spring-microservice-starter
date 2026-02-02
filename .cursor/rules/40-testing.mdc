@@ -1,0 +1,36 @@
+---
+description: Testing policy (HARD + explicit exceptions)
+alwaysApply: true
+---
+
+# Testing Policy
+
+## Global rule
+Tests are mandatory unless explicitly exempted by change classification.
+
+## DOCS_ONLY
+- No tests required
+- No production code changes allowed
+- CI must pass
+
+## BUILD_ONLY
+- Existing tests MUST pass
+- New tests optional unless runtime behavior changes
+
+## REFACTOR
+- Existing tests MUST pass
+- Do not delete tests
+- Add tests only if modified code was previously untested
+
+## BEHAVIOR_CHANGE (DEFAULT)
+- Tests are NON-NEGOTIABLE
+- Tests must fail before and pass after the change
+- Choose correct test level:
+  - Unit tests for domain/use case logic
+  - Integration tests for persistence, migrations, multi-tenancy
+  - Web tests for REST API changes
+
+## Quality rules
+- Tests must be deterministic
+- Fix flaky tests; never mute them
+- Prefer clarity over clever setups

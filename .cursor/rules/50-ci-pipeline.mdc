@@ -1,0 +1,30 @@
+---
+description: CI discipline and pipeline rules
+alwaysApply: true
+---
+
+# CI / Pipeline Rules
+
+## Absolute rules
+- CI MUST be green after every change.
+- Never weaken CI without an ADR.
+- Never merge broken CI.
+
+## Pull Request gating (HARD)
+- All changes MUST go through a Pull Request.
+- CI MUST run on `pull_request` events.
+- A PR MUST NOT be merged unless all required CI checks pass.
+- Branch protection MUST enforce required status checks on the main branch.
+
+## Local expectation (HARD where feasible)
+- Before pushing, ensure `./gradlew build` passes locally (unless not feasible due to environment limits).
+
+## If CI fails
+You MUST:
+1. Determine whether the failure is caused by your change.
+2. Fix it in the same PR/change set.
+
+## Not allowed
+- Disabling jobs.
+- Using `continue-on-error`.
+- Ignoring failing checks.

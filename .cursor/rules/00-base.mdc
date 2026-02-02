@@ -1,0 +1,43 @@
+---
+description: Base rules for all changes in this repository
+alwaysApply: true
+---
+
+# Base Rules (HARD)
+
+## Source of truth
+- Read and follow `/architecture.md`
+- Architectural decisions live in `/docs/adr`
+- If a change conflicts with ADRs, propose an ADR update instead of coding around it
+
+---
+
+## Change classification (MANDATORY)
+Every change MUST be classified as exactly one of:
+- DOCS_ONLY
+- BUILD_ONLY
+- REFACTOR
+- BEHAVIOR_CHANGE
+If uncertain, default to BEHAVIOR_CHANGE.
+
+---
+
+## Non-negotiables
+- Keep changes minimal and focused
+- Prefer explicit, readable code over magic
+- Do not introduce new libraries/frameworks without an ADR
+- Do not add configuration-driven abstractions
+
+---
+
+## Definition of Done (global)
+- Code compiles
+- Relevant tests updated and passing (per testing rules)
+- CI pipeline passes
+- No weakening of existing rules or checks
+
+---
+
+## Failure handling
+- Never work around failing CI
+- Never disable tests or checks to make CI green

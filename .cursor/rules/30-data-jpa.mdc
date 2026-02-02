@@ -1,0 +1,25 @@
+---
+description: Persistence, JPA, and database rules (Hex + tenancy)
+alwaysApply: true
+---
+
+# Data & JPA Rules
+
+## Soft multi-tenancy
+- Every entity except `Tenant` MUST contain `tenantId`
+- Tenant isolation must NOT rely on joins
+- Tenant context is a security boundary
+
+## Hexagonal persistence
+- Application/use cases talk to persistence via outbound ports (interfaces)
+- JPA repositories live in outbound adapters (infrastructure.persistence)
+
+## JPA/Hibernate
+- Default fetch is LAZY
+- Avoid `cascade = ALL`
+- Avoid `@ManyToMany`
+- Keep entities persistence-focused; avoid leaking persistence into the domain model design
+
+## Migrations
+- Use Flyway
+- Every schema change requires a migration

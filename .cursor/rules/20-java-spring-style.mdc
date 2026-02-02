@@ -1,0 +1,27 @@
+---
+description: Java and Spring Boot coding standards (Hex-friendly)
+alwaysApply: true
+---
+
+# Java & Spring Boot Standards
+
+## Spring Boot baseline
+- Spring Boot 3.x, Java 21
+- Prefer constructor injection
+- No field injection
+
+## Hexagonal discipline
+- Controllers (inbound adapters) only: validation, mapping, calling inbound ports
+- Use cases (inbound ports) contain orchestration and transactions
+- Outbound access only via ports (interfaces), implemented by adapters
+- Keep Spring annotations out of domain; prefer Spring in adapters/use cases wiring
+
+## REST API
+- Use explicit request/response DTOs
+- Never expose JPA entities directly from controllers
+- Keep error responses consistent and explicit
+
+## Avoid
+- Generic abstractions
+- Broad AOP
+- Persistence callbacks as business triggers
