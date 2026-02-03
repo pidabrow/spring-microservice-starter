@@ -69,6 +69,15 @@ Architecture, not business logic, is the focus of this repository.
 - **Security Boundary**: Tenant context is resolved once at the edge (Inbound Adapter) and propagated via a secure, immutable context.
 - **No Ad-hoc Filtering**: Isolation is handled at the persistence layer level to prevent developers from "forgetting" a WHERE clause.
 
+### Implementation Components
+
+- **Tenant Entity** (`platform-data`): JPA entity with UUID ID, status enum (ACTIVE/SUSPENDED), and audit fields. Does NOT contain `tenant_id` as it IS the tenant.
+- **TenantContext** (`platform-common`): Immutable record representing the current tenant for a request.
+- **TenantContextHolder** (`platform-common`): Thread-local holder for tenant context, providing explicit access without hidden static patterns.
+- **TenantContextInterceptor** (`platform-web`): Inbound adapter that resolves tenant ID from HTTP header `X-Tenant-Id` and sets the tenant context per request.
+- **TenantScopedEntity** (`platform-data`): Base entity class for tenant-scoped entities. Automatically sets `tenant_id` from `TenantContextHolder` in `@PrePersist`.
+- **Tenant Filter** (`platform-data`): Hibernate filter automatically enabled via AOP aspect for all `@Transactional` methods, ensuring tenant isolation at the persistence layer without requiring explicit filtering in application or domain layers.
+
 ---
 
 ## Event-Driven Design

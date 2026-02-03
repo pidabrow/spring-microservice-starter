@@ -39,3 +39,10 @@ Tests are mandatory unless explicitly exempted by change classification.
 - Tests must be deterministic
 - Fix flaky tests; never mute them
 - Prefer clarity over clever setups
+
+## Test Naming Convention
+- **Format**: Use `should_[expectedBehavior]_when_[condition]`.
+- **Snake Case**: Always use `snake_case` for test method names. It improves readability in test reports and IDEs.
+- **Example**: `should_deny_access_when_user_has_no_tenant_id()`.
+- **Avoid**: Prefixes like `test...` or overly formal `WHEN_..._THEN_...` unless the use case is extremely complex.
+- **Display Name**: For complex scenarios, use `@DisplayName("Descriptive sentence")` to explain the "why" behind the test.
