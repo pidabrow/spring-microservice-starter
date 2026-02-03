@@ -1,0 +1,84 @@
+package com.pidabrow.starter.data.entity;
+
+import com.pidabrow.starter.common.uuid.UuidV7Generator;
+import jakarta.persistence.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+/**
+ * Base entity class for tenant-scoped entities.
+ * Every entity except Tenant MUST include a tenant_id.
+ * Tenant association is by ID only, not via JPA relationships.
+ * 
+ * Tenant isolation is enforced at the persistence layer using Hibernate Filter.
+ * 
+ * Uses UUID v7 (time-ordered) as primary key to prevent B-Tree fragmentation.
+ */
+@MappedSuperclass
+@FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = java.util.UUID.class))
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
+public abstract class TenantScopedEntity {
+
+    @Id
+    @Column(name = "id", nullable = false, updatable = false)
+    private UUID id;
+
+    @Column(name = "tenant_id", nullable = false, updatable = false)
+    private UUID tenantId;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (id == null) {
+            id = UuidV7Generator.generate();
+        }
+        if (tenantId == null) {
+            tenantId = com.pidabrow.starter.common.tenant.TenantContextHolder.getTenantId();
+        }
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public UUID getTenantId() {
+        return tenantId;
+    }
+
+    /**
+     * Sets the tenant ID. This should only be called during entity creation.
+     * The tenant ID is immutable after creation (updatable = false).
+     */
+    protected void setTenantId(UUID tenantId) {
+        this.tenantId = tenantId;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+}
+
