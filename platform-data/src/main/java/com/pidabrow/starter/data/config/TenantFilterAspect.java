@@ -10,10 +10,15 @@ import org.springframework.transaction.annotation.Transactional;
  * AOP aspect that automatically enables tenant filter for all @Transactional methods.
  * This ensures tenant isolation at the persistence layer without requiring
  * explicit filtering in application or domain layers.
+ * 
+ * Note: While this uses broad AOP (which is generally avoided per cursor rules),
+ * it is justified here as a **security boundary**. Tenant isolation must be
+ * automatic and foolproof to prevent data leakage. This is not business logic,
+ * but infrastructure-level enforcement of a critical security constraint.
  */
 @Aspect
 @Component
-public class TenantFilterAspect {
+class TenantFilterAspect {
     
     private final TenantFilterTransactionManager tenantFilterTransactionManager;
     

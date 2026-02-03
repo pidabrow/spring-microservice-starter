@@ -18,13 +18,16 @@ public class TestEntity extends TenantScopedEntity {
         return name;
     }
     
-    public void setName(String name) {
+    /**
+     * Business method to update the name.
+     */
+    public void updateName(String name) {
         this.name = name;
     }
     
     public static TestEntity create(String name) {
         TestEntity entity = new TestEntity();
-        entity.setName(name);
+        entity.name = name;
         // tenantId will be set automatically from TenantContextHolder in @PrePersist
         return entity;
     }
