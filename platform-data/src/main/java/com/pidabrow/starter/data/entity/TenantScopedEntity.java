@@ -42,6 +42,11 @@ public abstract class TenantScopedEntity {
             id = UuidV7Generator.generate();
         }
         if (tenantId == null) {
+            // Automatic tenant ID assignment from context.
+            // Note: While ADR-004 discourages JPA callbacks for business logic,
+            // this is a **security enforcement** at the persistence boundary,
+            // not a business event. Tenant ID must be set automatically to prevent
+            // accidental omission, which would be a critical security vulnerability.
             tenantId = com.pidabrow.starter.common.tenant.TenantContextHolder.getTenantId();
         }
         if (createdAt == null) {
@@ -63,14 +68,6 @@ public abstract class TenantScopedEntity {
 
     public UUID getTenantId() {
         return tenantId;
-    }
-
-    /**
-     * Sets the tenant ID. This should only be called during entity creation.
-     * The tenant ID is immutable after creation (updatable = false).
-     */
-    protected void setTenantId(UUID tenantId) {
-        this.tenantId = tenantId;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -16,7 +16,7 @@ import java.util.UUID;
  * This ensures tenant isolation at the persistence layer.
  */
 @Component
-public class TenantFilterTransactionManager {
+class TenantFilterTransactionManager {
     
     @PersistenceContext
     private EntityManager entityManager;

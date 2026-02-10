@@ -37,6 +37,9 @@ public class Tenant {
         if (id == null) {
             id = UuidV7Generator.generate();
         }
+        // Audit timestamps are persistence concerns, not business logic.
+        // Using @PrePersist here is acceptable per ADR-004 which prohibits
+        // callbacks for "business events", not infrastructure concerns.
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
@@ -47,6 +50,7 @@ public class Tenant {
 
     @PreUpdate
     protected void onUpdate() {
+        // Audit timestamp update is a persistence concern.
         updatedAt = LocalDateTime.now();
     }
 

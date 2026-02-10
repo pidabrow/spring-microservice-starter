@@ -9,7 +9,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
  */
 @Configuration
 @EnableAspectJAutoProxy
-public class TenantFilterConfig {
+class TenantFilterConfig {
     // Tenant filter is enabled via TenantFilterAspect
 }
 
