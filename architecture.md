@@ -95,6 +95,7 @@ Auditing is **event-driven and append-only**:
 - audit entries are written only **after transaction commit**
 - records capture tenant, actor, request context, and change deltas
 - sensitive fields must be masked
+- all records track their creation and last modification times. To prevent data manipulation and ensure a reliable audit trail, these timestamps are strictly **database-driven**. This ensures that even direct database modifications are captured, maintaining the integrity of the system's history.
 
 ---
 

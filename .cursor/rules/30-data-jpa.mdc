@@ -32,6 +32,11 @@ alwaysApply: true
 - Avoid `@ManyToMany`
 - Keep entities persistence-focused; avoid leaking persistence into the domain model design
 
+## Auditing & Timestamps
+- **Database-Driven Timestamps**: `created_at` and `updated_at` MUST be managed by the database (e.g., `DEFAULT CURRENT_TIMESTAMP` and database triggers).
+- **JPA Synchronization**: Use Hibernate's `@Generated` annotation to ensure the persistence context is updated with database-generated timestamps after save/update.
+- **Audit Trail**: Do not rely on application-level clock for record-keeping integrity. The database server clock is the single source of truth.
+
 ## Migrations
 - Use Flyway
 - Every schema change requires a migration
