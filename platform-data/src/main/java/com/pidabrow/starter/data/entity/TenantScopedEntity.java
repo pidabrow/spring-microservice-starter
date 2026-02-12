@@ -4,7 +4,9 @@ import com.pidabrow.starter.common.uuid.UuidV7Generator;
 import jakarta.persistence.*;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.ParamDef;
+import org.hibernate.generator.EventType;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -30,10 +32,12 @@ public abstract class TenantScopedEntity {
     @Column(name = "tenant_id", nullable = false, updatable = false)
     private UUID tenantId;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
+    @Generated(event = EventType.INSERT)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    @Generated(event = {EventType.INSERT, EventType.UPDATE})
     private LocalDateTime updatedAt;
 
     @PrePersist
@@ -49,17 +53,7 @@ public abstract class TenantScopedEntity {
             // accidental omission, which would be a critical security vulnerability.
             tenantId = com.pidabrow.starter.common.tenant.TenantContextHolder.getTenantId();
         }
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-        if (updatedAt == null) {
-            updatedAt = LocalDateTime.now();
-        }
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        // Timestamps are now database-driven via @Generated annotation
     }
 
     public UUID getId() {

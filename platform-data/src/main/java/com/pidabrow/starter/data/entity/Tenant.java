@@ -2,6 +2,8 @@ package com.pidabrow.starter.data.entity;
 
 import com.pidabrow.starter.common.uuid.UuidV7Generator;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -26,10 +28,12 @@ public class Tenant {
     @Enumerated(EnumType.STRING)
     private TenantStatus status;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
+    @Generated(event = EventType.INSERT)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
+    @Generated(event = {EventType.INSERT, EventType.UPDATE})
     private LocalDateTime updatedAt;
 
     @PrePersist
@@ -37,21 +41,7 @@ public class Tenant {
         if (id == null) {
             id = UuidV7Generator.generate();
         }
-        // Audit timestamps are persistence concerns, not business logic.
-        // Using @PrePersist here is acceptable per ADR-004 which prohibits
-        // callbacks for "business events", not infrastructure concerns.
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-        if (updatedAt == null) {
-            updatedAt = LocalDateTime.now();
-        }
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        // Audit timestamp update is a persistence concern.
-        updatedAt = LocalDateTime.now();
+        // Timestamps are now database-driven via @Generated annotation
     }
 
     public UUID getId() {
@@ -82,8 +72,7 @@ public class Tenant {
         tenant.id = UuidV7Generator.generate();
         tenant.name = name;
         tenant.status = TenantStatus.ACTIVE;
-        tenant.createdAt = LocalDateTime.now();
-        tenant.updatedAt = LocalDateTime.now();
+        // Timestamps are database-driven, no need to set them here
         return tenant;
     }
 
@@ -93,7 +82,7 @@ public class Tenant {
      */
     public void suspend() {
         this.status = TenantStatus.SUSPENDED;
-        this.updatedAt = LocalDateTime.now();
+        // updatedAt is database-driven via trigger
     }
 
     /**
@@ -102,7 +91,7 @@ public class Tenant {
      */
     public void activate() {
         this.status = TenantStatus.ACTIVE;
-        this.updatedAt = LocalDateTime.now();
+        // updatedAt is database-driven via trigger
     }
 
     public enum TenantStatus {
