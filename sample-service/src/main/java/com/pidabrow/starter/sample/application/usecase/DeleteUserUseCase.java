@@ -2,6 +2,7 @@ package com.pidabrow.starter.sample.application.usecase;
 
 import com.pidabrow.starter.common.event.DomainEventPublisher;
 import com.pidabrow.starter.common.tenant.TenantContextHolder;
+import com.pidabrow.starter.sample.application.port.out.DeleteNotificationRequestPort;
 import com.pidabrow.starter.sample.application.port.out.DeleteUserPort;
 import com.pidabrow.starter.sample.application.port.out.FindUserPort;
 import com.pidabrow.starter.sample.domain.user.User;
@@ -22,14 +23,17 @@ public class DeleteUserUseCase {
 
     private final FindUserPort findUserPort;
     private final DeleteUserPort deleteUserPort;
+    private final DeleteNotificationRequestPort deleteNotificationRequestPort;
     private final DomainEventPublisher eventPublisher;
 
     public DeleteUserUseCase(
             FindUserPort findUserPort,
             DeleteUserPort deleteUserPort,
+            DeleteNotificationRequestPort deleteNotificationRequestPort,
             DomainEventPublisher eventPublisher) {
         this.findUserPort = findUserPort;
         this.deleteUserPort = deleteUserPort;
+        this.deleteNotificationRequestPort = deleteNotificationRequestPort;
         this.eventPublisher = eventPublisher;
     }
 
@@ -48,6 +52,9 @@ public class DeleteUserUseCase {
         if (!existingUser.tenantId().equals(tenantId)) {
             throw new IllegalStateException("User does not belong to current tenant");
         }
+
+        // Delete notification requests first (to avoid foreign key constraint violation)
+        deleteNotificationRequestPort.deleteByUserId(userId);
 
         // Delete user
         deleteUserPort.deleteById(userId);

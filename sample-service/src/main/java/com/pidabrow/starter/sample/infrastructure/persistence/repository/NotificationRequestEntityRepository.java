@@ -2,6 +2,7 @@ package com.pidabrow.starter.sample.infrastructure.persistence.repository;
 
 import com.pidabrow.starter.sample.infrastructure.persistence.entity.NotificationRequestEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -22,5 +23,13 @@ public interface NotificationRequestEntityRepository extends JpaRepository<Notif
      */
     @Query("SELECT n FROM NotificationRequestEntity n WHERE n.id = :id")
     Optional<NotificationRequestEntity> findById(@Param("id") @org.springframework.lang.NonNull UUID id);
+
+    /**
+     * Deletes all notification requests for a given user.
+     * Tenant isolation is enforced automatically via Hibernate filter.
+     */
+    @Modifying
+    @Query("DELETE FROM NotificationRequestEntity n WHERE n.userId = :userId")
+    void deleteByUserId(@Param("userId") UUID userId);
 }
 
