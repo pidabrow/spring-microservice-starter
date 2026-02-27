@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: starter-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-starter_db}
+      POSTGRES_USER: ${POSTGRES_USER:-starter_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-starter_pass}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - starter-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-starter_user} -d ${POSTGRES_DB:-starter_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  sample-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: starter-sample-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-starter_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-starter_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-starter_pass}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_LOCATIONS: classpath:db/migration
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    networks:
+      - starter-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+    name: starter_postgres_data
+
+networks:
+  starter-network:
+    name: starter-network
+    driver: bridge
+
