@@ -14,7 +14,9 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -55,6 +57,9 @@ class TenantIsolationIntegrationTest {
     @Autowired
     private EntityManager entityManager;
 
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+
     private UUID tenantAId;
     private UUID tenantBId;
     
@@ -66,17 +71,22 @@ class TenantIsolationIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Create two tenants
-        Tenant tenantA = Tenant.create("Tenant A");
-        tenantAId = tenantA.getId();
-        entityManager.persist(tenantA);
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+        transactionTemplate.execute(status -> {
+            // Create two tenants in a committed transaction so they are visible
+            // to all subsequent @Transactional test methods
+            Tenant tenantA = Tenant.create("Tenant A");
+            tenantAId = tenantA.getId();
+            entityManager.persist(tenantA);
 
-        Tenant tenantB = Tenant.create("Tenant B");
-        tenantBId = tenantB.getId();
-        entityManager.persist(tenantB);
+            Tenant tenantB = Tenant.create("Tenant B");
+            tenantBId = tenantB.getId();
+            entityManager.persist(tenantB);
 
-        entityManager.flush();
-        entityManager.clear();
+            entityManager.flush();
+            entityManager.clear();
+            return null;
+        });
     }
 
     @Test
