@@ -1,6 +1,9 @@
 package com.pidabrow.starter.data.entity;
 
 import com.pidabrow.starter.common.actor.ActorContext;
+import com.pidabrow.starter.common.event.DomainEvent;
+import com.pidabrow.starter.common.event.EntityCreatedEvent;
+import com.pidabrow.starter.common.event.EntityUpdatedEvent;
 import com.pidabrow.starter.common.uuid.UuidV7Generator;
 import jakarta.persistence.*;
 import org.hibernate.annotations.Generated;
@@ -85,7 +88,7 @@ public class AuditLog {
      * @param actorContext the actor context
      * @return a new AuditLog instance
      */
-    public static AuditLog fromEvent(com.pidabrow.starter.common.event.DomainEvent event, ActorContext actorContext) {
+    public static AuditLog fromEvent(DomainEvent event, ActorContext actorContext) {
         UUID id = UuidV7Generator.generate();
         String action = determineAction(event);
         String eventClassName = event.getClass().getName();
@@ -108,21 +111,18 @@ public class AuditLog {
         );
     }
     
-    private static String determineAction(com.pidabrow.starter.common.event.DomainEvent event) {
-        if (event instanceof com.pidabrow.starter.common.event.EntityCreatedEvent) {
-            return "CREATE";
-        } else if (event instanceof com.pidabrow.starter.common.event.EntityUpdatedEvent) {
-            return "UPDATE";
-        } else {
-            return "UNKNOWN";
-        }
+    private static String determineAction(DomainEvent event) {
+        return switch (event) {
+            case EntityCreatedEvent ignored -> "CREATE";
+            case EntityUpdatedEvent ignored -> "UPDATE";
+        };
     }
     
-    private static String extractChanges(com.pidabrow.starter.common.event.DomainEvent event) {
-        if (event instanceof com.pidabrow.starter.common.event.EntityUpdatedEvent updatedEvent) {
-            return updatedEvent.delta();
-        }
-        return null;
+    private static String extractChanges(DomainEvent event) {
+        return switch (event) {
+            case EntityUpdatedEvent updatedEvent -> updatedEvent.delta();
+            case EntityCreatedEvent ignored -> null;
+        };
     }
     
     public UUID getId() {

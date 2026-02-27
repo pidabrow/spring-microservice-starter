@@ -41,9 +41,7 @@ class AuditLogListener {
         }
         
         AuditLog auditLog = AuditLog.fromEvent(event, actorContext);
-        if (auditLog != null) {
-            auditLogRepository.save(auditLog);
-        }
+        auditLogRepository.save(auditLog);
     }
 }
 
