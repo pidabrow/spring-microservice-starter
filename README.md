@@ -93,18 +93,43 @@ The service will start on port 8080.
 
 The project includes Docker support for reproducible, containerized deployments.
 
-**Start the entire stack (PostgreSQL + Application):**
+**Quick Start (using script):**
+
+The easiest way to start the containerized stack is using the provided script:
 
 ```bash
-docker compose up --build
+./scripts/docker-up.sh --build
 ```
 
-This command will:
+This script will:
+- Check Docker and Docker Compose availability
 - Build the application Docker image (multi-stage build)
 - Start PostgreSQL 16+ in a container
 - Start the sample-service application
 - Wait for PostgreSQL to be healthy before starting the application
 - Run database migrations automatically via Flyway
+
+**Script Options:**
+
+```bash
+./scripts/docker-up.sh [OPTIONS]
+```
+
+- `--build, -b` - Build images before starting containers
+- `--logs, -l` - Follow logs after starting (runs in foreground)
+- `--stop, -s` - Stop running containers
+- `--clean, -c` - Stop containers and remove volumes (clean slate)
+- `--help, -h` - Show help message
+
+**Manual Docker Compose Commands:**
+
+If you prefer to use Docker Compose directly:
+
+**Start the entire stack:**
+
+```bash
+docker compose up --build
+```
 
 **Stop the stack:**
 
