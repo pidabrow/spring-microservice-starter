@@ -1,12 +1,12 @@
 package com.pidabrow.starter.sample.application.usecase;
 
 import com.pidabrow.starter.common.event.DomainEventPublisher;
+import com.pidabrow.starter.common.event.UserDeletedEvent;
 import com.pidabrow.starter.common.tenant.TenantContextHolder;
 import com.pidabrow.starter.sample.application.port.out.DeleteNotificationRequestPort;
 import com.pidabrow.starter.sample.application.port.out.DeleteUserPort;
 import com.pidabrow.starter.sample.application.port.out.FindUserPort;
 import com.pidabrow.starter.sample.domain.user.User;
-import com.pidabrow.starter.sample.domain.user.UserDeletedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

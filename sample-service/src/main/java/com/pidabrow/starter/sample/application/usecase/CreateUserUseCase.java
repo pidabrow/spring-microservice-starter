@@ -1,13 +1,13 @@
 package com.pidabrow.starter.sample.application.usecase;
 
 import com.pidabrow.starter.common.event.DomainEventPublisher;
+import com.pidabrow.starter.common.event.NotificationRequestedEvent;
+import com.pidabrow.starter.common.event.UserCreatedEvent;
 import com.pidabrow.starter.common.tenant.TenantContextHolder;
 import com.pidabrow.starter.sample.application.port.out.SaveNotificationRequestPort;
 import com.pidabrow.starter.sample.application.port.out.SaveUserPort;
 import com.pidabrow.starter.sample.domain.user.NotificationRequest;
-import com.pidabrow.starter.sample.domain.user.NotificationRequestedEvent;
 import com.pidabrow.starter.sample.domain.user.User;
-import com.pidabrow.starter.sample.domain.user.UserCreatedEvent;
 import com.pidabrow.starter.sample.domain.user.UserPreferences;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

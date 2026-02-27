@@ -1,4 +1,4 @@
-package com.pidabrow.starter.sample.domain.user;
+package com.pidabrow.starter.common.event;
 
 import com.pidabrow.starter.common.event.DomainEvent;
 
@@ -6,17 +6,19 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Domain event representing the creation of a User.
+ * Domain event representing a notification request being persisted in the Outbox.
+ * This event is published when a NotificationRequest is saved.
+ * Note: We audit the REQUEST, not the actual delivery (which will be handled by the Outbox processor later).
  * This is an immutable record implementing DomainEvent.
  */
-public record UserCreatedEvent(
+public record NotificationRequestedEvent(
         UUID entityId,
         UUID tenantId,
         String entityType,
         Instant occurredAt
 ) implements DomainEvent {
     
-    public UserCreatedEvent {
+    public NotificationRequestedEvent {
         if (entityId == null) {
             throw new IllegalArgumentException("Entity ID cannot be null");
         }
@@ -31,8 +33,13 @@ public record UserCreatedEvent(
         }
     }
     
-    public static UserCreatedEvent of(UUID userId, UUID tenantId) {
-        return new UserCreatedEvent(userId, tenantId, User.ENTITY_TYPE, Instant.now());
+    public static NotificationRequestedEvent of(UUID notificationRequestId, UUID tenantId) {
+        return new NotificationRequestedEvent(
+                notificationRequestId,
+                tenantId,
+                "NotificationRequest",
+                Instant.now()
+        );
     }
 }
 

@@ -4,17 +4,16 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Interface representing a domain event.
+ * Sealed interface representing a domain event.
  * All domain events must be immutable Java Records.
  * Domain events must not depend on Spring or JPA.
  * 
  * Domain events are published after successful transaction commit
  * and are used for auditing and other cross-cutting concerns.
- * 
- * Note: Changed from sealed interface to regular interface to allow
- * domain-specific events in sample-service to implement this interface.
  */
-public interface DomainEvent {
+public sealed interface DomainEvent
+        permits EntityCreatedEvent, EntityUpdatedEvent,
+                UserCreatedEvent, UserUpdatedEvent, UserDeletedEvent, NotificationRequestedEvent {
     
     /**
      * The ID of the entity that this event relates to.
