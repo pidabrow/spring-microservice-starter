@@ -60,7 +60,8 @@ Example microservice demonstrating the platform usage:
 
 ### Prerequisites
 
-- Java 21
+- Java 21 (for local development)
+- Docker and Docker Compose (for containerized deployment)
 
 ### Build the Project
 
@@ -76,13 +77,104 @@ Example microservice demonstrating the platform usage:
 
 ### Run the Sample Service
 
-Run the application:
+#### Local Development
+
+Run the application locally:
 
 ```bash
 ./gradlew :sample-service:bootRun
 ```
 
 The service will start on port 8080.
+
+**Note:** For local development, ensure PostgreSQL is running and configured in `application.yml`.
+
+#### Containerized Deployment
+
+The project includes Docker support for reproducible, containerized deployments.
+
+**Quick Start (using script):**
+
+The easiest way to start the containerized stack is using the provided script:
+
+```bash
+./scripts/docker-up.sh --build
+```
+
+This script will:
+- Check Docker and Docker Compose availability
+- Build the application Docker image (multi-stage build)
+- Start PostgreSQL 16+ in a container
+- Start the sample-service application
+- Wait for PostgreSQL to be healthy before starting the application
+- Run database migrations automatically via Flyway
+
+**Script Options:**
+
+```bash
+./scripts/docker-up.sh [OPTIONS]
+```
+
+- `--build, -b` - Build images before starting containers
+- `--logs, -l` - Follow logs after starting (runs in foreground)
+- `--stop, -s` - Stop running containers
+- `--clean, -c` - Stop containers and remove volumes (clean slate)
+- `--help, -h` - Show help message
+
+**Manual Docker Compose Commands:**
+
+If you prefer to use Docker Compose directly:
+
+**Start the entire stack:**
+
+```bash
+docker compose up --build
+```
+
+**Stop the stack:**
+
+```bash
+docker compose down
+```
+
+**Stop and remove volumes (clean slate):**
+
+```bash
+docker compose down -v
+```
+
+**View logs:**
+
+```bash
+docker compose logs -f sample-service
+```
+
+**Environment Variables:**
+
+You can customize the deployment using environment variables:
+
+```bash
+# PostgreSQL configuration
+export POSTGRES_DB=starter_db
+export POSTGRES_USER=starter_user
+export POSTGRES_PASSWORD=starter_pass
+export POSTGRES_PORT=5432
+
+# Application port
+export APP_PORT=8080
+
+# Then start
+docker compose up --build
+```
+
+**Docker Features:**
+
+- **Multi-stage build**: Optimized Dockerfile with separate build and runtime stages
+- **Non-root user**: Application runs as `spring` user for security
+- **Health checks**: Both PostgreSQL and application include health checks
+- **Persistent storage**: PostgreSQL data is stored in a named volume
+- **Isolated network**: Services communicate via a dedicated bridge network
+- **Layer caching**: Dependencies are cached to speed up subsequent builds
 
 ## API Endpoints
 
