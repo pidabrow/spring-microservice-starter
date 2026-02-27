@@ -62,6 +62,7 @@ public class NotificationRequestEntity extends TenantScopedEntity {
                 notificationRequest.status(),
                 notificationRequest.retryCount()
         );
+        entity.initId(notificationRequest.id());
         return entity;
     }
 

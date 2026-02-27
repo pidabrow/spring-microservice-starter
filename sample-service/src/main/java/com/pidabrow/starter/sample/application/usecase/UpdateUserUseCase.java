@@ -11,6 +11,7 @@ import com.pidabrow.starter.sample.domain.user.UserPreferences;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 /**
@@ -21,6 +22,8 @@ import java.util.UUID;
  */
 @Component
 public class UpdateUserUseCase {
+
+    private static final String EMPTY_JSON_PATCH = "[]";
 
     private final FindUserPort findUserPort;
     private final SaveUserPort saveUserPort;
@@ -51,7 +54,7 @@ public class UpdateUserUseCase {
 
         // Find existing user
         User existingUser = findUserPort.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NoSuchElementException("User not found: " + userId));
 
         // Verify tenant isolation
         if (!existingUser.tenantId().equals(tenantId)) {
@@ -75,9 +78,11 @@ public class UpdateUserUseCase {
         // Save updated user
         User savedUser = saveUserPort.save(updatedUser);
 
-        // Publish domain event (will be handled AFTER_COMMIT)
-        UserUpdatedEvent event = UserUpdatedEvent.of(savedUser.id(), tenantId, delta);
-        eventPublisher.publish(event);
+        // Publish domain event only if there are actual changes (will be handled AFTER_COMMIT)
+        if (!EMPTY_JSON_PATCH.equals(delta)) {
+            UserUpdatedEvent event = UserUpdatedEvent.of(savedUser.id(), tenantId, delta);
+            eventPublisher.publish(event);
+        }
 
         return savedUser;
     }

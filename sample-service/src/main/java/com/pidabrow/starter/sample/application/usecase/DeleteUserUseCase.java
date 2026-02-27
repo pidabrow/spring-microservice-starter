@@ -10,6 +10,7 @@ import com.pidabrow.starter.sample.domain.user.User;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 /**
@@ -46,7 +47,7 @@ public class DeleteUserUseCase {
 
         // Find existing user to verify it exists and belongs to tenant
         User existingUser = findUserPort.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NoSuchElementException("User not found: " + userId));
 
         // Verify tenant isolation
         if (!existingUser.tenantId().equals(tenantId)) {

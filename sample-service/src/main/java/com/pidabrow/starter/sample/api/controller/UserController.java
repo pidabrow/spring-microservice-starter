@@ -29,10 +29,6 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
-        // Preferences are validated by @NotNull, but we add null check for safety
-        if (request.preferences() == null) {
-            throw new IllegalArgumentException("Preferences are required");
-        }
         UserPreferences preferences = new UserPreferences(
                 request.preferences().emailEnabled(),
                 request.preferences().smsEnabled()
