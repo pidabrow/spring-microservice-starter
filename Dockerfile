@@ -1,9 +1,7 @@
 # Multi-stage Dockerfile for Spring Boot application
 # Stage 1: Build
-FROM eclipse-temurin:21-jdk-alpine AS builder
-
-# Install build dependencies
-RUN apk add --no-cache bash
+# Using Debian-based image instead of Alpine to avoid native library issues on ARM
+FROM eclipse-temurin:21-jdk-jammy AS builder
 
 WORKDIR /build
 
@@ -31,13 +29,16 @@ COPY sample-service ./sample-service
 RUN ./gradlew :sample-service:bootJar --no-daemon
 
 # Stage 2: Runtime
-FROM eclipse-temurin:21-jre-alpine
+# Using Debian-based image for consistency and to avoid native library issues
+FROM eclipse-temurin:21-jre-jammy
 
 # Create non-root user
-RUN addgroup -S spring && adduser -S spring -G spring
+RUN groupadd -r spring && useradd -r -g spring spring
 
 # Install necessary runtime dependencies (wget for healthcheck)
-RUN apk add --no-cache tzdata wget
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends wget tzdata && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set timezone
 ENV TZ=UTC
