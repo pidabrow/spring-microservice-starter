@@ -77,15 +77,17 @@ class AuditLogIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Clear audit logs from previous tests
+        // Clear audit logs from previous tests.
+        // We use TRUNCATE to avoid firing row-level triggers that enforce
+        // append-only semantics in production.
         TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
         transactionTemplate.execute(status -> {
-            auditLogRepository.deleteAll();
+            entityManager.createNativeQuery("TRUNCATE TABLE audit_log").executeUpdate();
             entityManager.flush();
             entityManager.clear();
             return null;
         });
-        
+
         // Create tenant in a separate committed transaction
         transactionTemplate.execute(status -> {
             Tenant tenant = Tenant.create("Test Tenant");
