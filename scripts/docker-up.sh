@@ -24,8 +24,8 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 1
 fi
 
-# Check if Docker Compose is available
-if ! command -v docker compose >/dev/null 2>&1; then
+# Check if Docker Compose is available (supports both Compose V2 plugin and standalone)
+if ! docker compose version >/dev/null 2>&1; then
   echo -e "${RED}ERROR: 'docker compose' command not found on PATH.${NC}"
   echo "      Please install Docker Compose and make sure it is available on PATH."
   exit 1

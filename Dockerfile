@@ -17,7 +17,7 @@ COPY platform-web/build.gradle.kts ./platform-web/
 COPY sample-service/build.gradle.kts ./sample-service/
 
 # Download dependencies (layer caching optimization)
-RUN chmod +x ./gradlew && ./gradlew dependencies --no-daemon || true
+RUN chmod +x ./gradlew && ./gradlew dependencies --no-daemon
 
 # Copy source code
 COPY platform-common ./platform-common
