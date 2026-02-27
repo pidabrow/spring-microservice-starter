@@ -112,17 +112,52 @@ public class AuditLog {
     }
     
     private static String determineAction(DomainEvent event) {
-        return switch (event) {
-            case EntityCreatedEvent ignored -> "CREATE";
-            case EntityUpdatedEvent ignored -> "UPDATE";
-        };
+        // Handle platform-common events
+        if (event instanceof EntityCreatedEvent) {
+            return "CREATE";
+        }
+        if (event instanceof EntityUpdatedEvent) {
+            return "UPDATE";
+        }
+        
+        // Handle sample-service domain events via reflection
+        String className = event.getClass().getSimpleName();
+        if (className.endsWith("CreatedEvent") || className.equals("UserCreatedEvent") || className.equals("NotificationRequestedEvent")) {
+            return "CREATE";
+        }
+        if (className.endsWith("UpdatedEvent") || className.equals("UserUpdatedEvent")) {
+            return "UPDATE";
+        }
+        if (className.endsWith("DeletedEvent") || className.equals("UserDeletedEvent")) {
+            return "DELETE";
+        }
+        
+        // Default fallback
+        return "UNKNOWN";
     }
     
     private static String extractChanges(DomainEvent event) {
-        return switch (event) {
-            case EntityUpdatedEvent updatedEvent -> updatedEvent.delta();
-            case EntityCreatedEvent ignored -> null;
-        };
+        // Handle platform-common events
+        if (event instanceof EntityUpdatedEvent updatedEvent) {
+            return updatedEvent.delta();
+        }
+        
+        // Handle sample-service domain events via reflection
+        String className = event.getClass().getSimpleName();
+        if (className.endsWith("UpdatedEvent") || className.equals("UserUpdatedEvent")) {
+            try {
+                // Use reflection to get delta() method for update events
+                var deltaMethod = event.getClass().getMethod("delta");
+                Object delta = deltaMethod.invoke(event);
+                return delta != null ? delta.toString() : null;
+            } catch (Exception e) {
+                // If reflection fails, return null
+                return null;
+            }
+        }
+        
+        // For created/deleted events, no changes
+        return null;
     }
     
     public UUID getId() {

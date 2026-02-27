@@ -103,5 +103,21 @@ public class UserEntity extends TenantScopedEntity {
     public Map<String, Object> getPreferences() {
         return preferences;
     }
+
+    /**
+     * Updates entity from domain model.
+     * This allows updates without public setters, maintaining immutability principles.
+     * Used by persistence adapter for updates.
+     */
+    public void updateFromDomain(User user) {
+        this.email = user.email();
+        this.phoneNumber = user.phoneNumber();
+        this.firstName = user.firstName();
+        this.lastName = user.lastName();
+        this.preferences = Map.of(
+                "emailEnabled", user.preferences().emailEnabled(),
+                "smsEnabled", user.preferences().smsEnabled()
+        );
+    }
 }
 

@@ -1,12 +1,13 @@
 package com.pidabrow.starter.sample.application.usecase;
 
 import com.pidabrow.starter.common.event.DomainEventPublisher;
-import com.pidabrow.starter.common.event.EntityCreatedEvent;
 import com.pidabrow.starter.common.tenant.TenantContextHolder;
 import com.pidabrow.starter.sample.application.port.out.SaveNotificationRequestPort;
 import com.pidabrow.starter.sample.application.port.out.SaveUserPort;
 import com.pidabrow.starter.sample.domain.user.NotificationRequest;
+import com.pidabrow.starter.sample.domain.user.NotificationRequestedEvent;
 import com.pidabrow.starter.sample.domain.user.User;
+import com.pidabrow.starter.sample.domain.user.UserCreatedEvent;
 import com.pidabrow.starter.sample.domain.user.UserPreferences;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,15 +74,19 @@ public class CreateUserUseCase {
         );
 
         // Save notification request (same transaction)
-        saveNotificationRequestPort.save(notificationRequest);
+        NotificationRequest savedNotificationRequest = saveNotificationRequestPort.save(notificationRequest);
 
-        // Publish domain event (will be handled AFTER_COMMIT)
-        EntityCreatedEvent event = EntityCreatedEvent.of(
-                savedUser.id(),
-                tenantId,
-                User.ENTITY_TYPE
+        // Publish domain events (will be handled AFTER_COMMIT)
+        // 1. UserCreatedEvent for the user creation
+        UserCreatedEvent userCreatedEvent = UserCreatedEvent.of(savedUser.id(), tenantId);
+        eventPublisher.publish(userCreatedEvent);
+
+        // 2. NotificationRequestedEvent for the notification outbox entry
+        NotificationRequestedEvent notificationRequestedEvent = NotificationRequestedEvent.of(
+                savedNotificationRequest.id(),
+                tenantId
         );
-        eventPublisher.publish(event);
+        eventPublisher.publish(notificationRequestedEvent);
 
         return savedUser;
     }
