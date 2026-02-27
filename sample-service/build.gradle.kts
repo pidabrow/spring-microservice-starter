@@ -12,4 +12,5 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("com.h2database:h2")
+    testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
 }
