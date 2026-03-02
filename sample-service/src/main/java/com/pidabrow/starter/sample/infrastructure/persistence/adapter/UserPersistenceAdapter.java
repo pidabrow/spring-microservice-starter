@@ -33,6 +33,7 @@ class UserPersistenceAdapter implements SaveUserPort, FindUserPort, DeleteUserPo
     @Override
     @Transactional
     public User save(User user) {
+        enableTenantFilter();
         // Check if user exists
         Optional<UserEntity> existing = repository.findById(user.id());
         

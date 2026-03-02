@@ -1,5 +1,6 @@
 package com.pidabrow.starter.sample.infrastructure.persistence.adapter;
 
+import com.pidabrow.starter.common.tenant.TenantContextHolder;
 import com.pidabrow.starter.sample.application.port.out.DeleteNotificationRequestPort;
 import com.pidabrow.starter.sample.application.port.out.SaveNotificationRequestPort;
 import com.pidabrow.starter.sample.domain.user.NotificationRequest;
@@ -34,7 +35,11 @@ class NotificationRequestPersistenceAdapter implements SaveNotificationRequestPo
     @Override
     @Transactional
     public void deleteByUserId(UUID userId) {
-        repository.deleteByUserId(userId);
+        UUID tenantId = TenantContextHolder.getTenantId();
+        if (tenantId == null) {
+            throw new IllegalStateException("Tenant context must be set");
+        }
+        repository.deleteByUserIdAndTenantId(userId, tenantId);
     }
 }
 

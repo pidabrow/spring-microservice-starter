@@ -25,11 +25,11 @@ public interface NotificationRequestEntityRepository extends JpaRepository<Notif
     Optional<NotificationRequestEntity> findById(@Param("id") @org.springframework.lang.NonNull UUID id);
 
     /**
-     * Deletes all notification requests for a given user.
-     * Tenant isolation is enforced automatically via Hibernate filter.
+     * Deletes all notification requests for a given user within the given tenant.
+     * Tenant ID is passed explicitly because Hibernate filters do not apply to bulk JPQL DELETE statements.
      */
     @Modifying
-    @Query("DELETE FROM NotificationRequestEntity n WHERE n.userId = :userId")
-    void deleteByUserId(@Param("userId") UUID userId);
+    @Query("DELETE FROM NotificationRequestEntity n WHERE n.userId = :userId AND n.tenantId = :tenantId")
+    void deleteByUserIdAndTenantId(@Param("userId") UUID userId, @Param("tenantId") UUID tenantId);
 }
 
