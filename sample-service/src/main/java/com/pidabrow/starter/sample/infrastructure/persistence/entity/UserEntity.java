@@ -62,6 +62,7 @@ public class UserEntity extends TenantScopedEntity {
                         "smsEnabled", user.preferences().smsEnabled()
                 )
         );
+        entity.initId(user.id());
         return entity;
     }
 

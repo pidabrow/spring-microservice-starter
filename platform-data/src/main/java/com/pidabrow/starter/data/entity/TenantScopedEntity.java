@@ -40,6 +40,15 @@ public abstract class TenantScopedEntity {
     @Generated(event = {EventType.INSERT, EventType.UPDATE})
     private LocalDateTime updatedAt;
 
+    /**
+     * Initializes the entity ID from a domain model identity.
+     * Must be called before the entity is persisted, so the domain-generated UUID is preserved.
+     * If not called, {@code @PrePersist} will generate a new UUID.
+     */
+    protected void initId(UUID id) {
+        this.id = id;
+    }
+
     @PrePersist
     protected void onCreate() {
         if (id == null) {

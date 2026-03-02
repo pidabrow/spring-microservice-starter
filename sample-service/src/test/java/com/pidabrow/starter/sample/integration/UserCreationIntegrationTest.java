@@ -4,6 +4,7 @@ import com.pidabrow.starter.common.tenant.TenantContext;
 import com.pidabrow.starter.common.tenant.TenantContextHolder;
 import com.pidabrow.starter.data.entity.Tenant;
 import com.pidabrow.starter.sample.MicroserviceStarterApplication;
+import com.pidabrow.starter.sample.application.port.out.SaveNotificationRequestPort;
 import com.pidabrow.starter.sample.application.usecase.CreateUserUseCase;
 import com.pidabrow.starter.sample.domain.user.User;
 import com.pidabrow.starter.sample.domain.user.UserPreferences;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -31,6 +33,9 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 
 /**
  * Integration test for user creation with notification outbox.
@@ -60,6 +65,9 @@ class UserCreationIntegrationTest {
 
     @Autowired
     private CreateUserUseCase createUserUseCase;
+
+    @SpyBean
+    private SaveNotificationRequestPort saveNotificationRequestPort;
 
     @Autowired
     private UserEntityRepository userEntityRepository;
@@ -194,6 +202,33 @@ class UserCreationIntegrationTest {
         assertThat(tenantBUsers).hasSize(1);
         assertThat(tenantBUsers.get(0).getEmail()).isEqualTo("tenantB@example.com");
         assertThat(tenantBUsers.get(0).getTenantId()).isEqualTo(tenantBId);
+    }
+
+    @Test
+    @DisplayName("Should rollback user when notification request save fails (atomic transaction)")
+    void should_rollback_user_when_notification_save_fails() {
+        // Given: tenant context is set, no users exist, and notification save is stubbed to throw
+        TenantContextHolder.setContext(TenantContext.of(tenantAId));
+        assertThat(userEntityRepository.findAll()).as("pre-condition: no users exist").isEmpty();
+        doThrow(new RuntimeException("Simulated notification failure"))
+                .when(saveNotificationRequestPort).save(any());
+
+        UserPreferences preferences = new UserPreferences(true, true);
+
+        // When: creating a user (notification save will fail)
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+        assertThatThrownBy(() -> transactionTemplate.execute(status ->
+                createUserUseCase.execute("rollback@example.com", "+9999999999", "Roll", "Back", preferences)
+        )).isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Simulated notification failure");
+
+        // Then: user is NOT saved (transaction was rolled back)
+        List<UserEntity> users = userEntityRepository.findAll();
+        assertThat(users).isEmpty();
+
+        // And: no notification requests exist
+        List<NotificationRequestEntity> notifications = notificationRequestEntityRepository.findAll();
+        assertThat(notifications).isEmpty();
     }
 }
 
