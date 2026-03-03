@@ -12,6 +12,7 @@ import org.hibernate.Filter;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -57,6 +58,15 @@ class UserPersistenceAdapter implements SaveUserPort, FindUserPort, DeleteUserPo
         enableTenantFilter();
         return repository.findById(userId)
                 .map(UserEntity::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<User> findAll() {
+        enableTenantFilter();
+        return repository.findAll().stream()
+                .map(UserEntity::toDomain)
+                .toList();
     }
 
     @Override
