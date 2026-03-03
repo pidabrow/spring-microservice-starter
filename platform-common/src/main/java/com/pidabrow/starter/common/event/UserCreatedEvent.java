@@ -1,7 +1,5 @@
 package com.pidabrow.starter.common.event;
 
-import com.pidabrow.starter.common.event.DomainEvent;
-
 import java.time.Instant;
 import java.util.UUID;
 
