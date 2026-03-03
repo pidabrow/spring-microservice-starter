@@ -94,7 +94,26 @@ class UpdateUserUseCaseTest {
     }
 
     @Test
-    @DisplayName("Should not publish event when no fields changed")
+    @DisplayName("Should throw NoSuchElementException when user belongs to another tenant")
+    void should_throw_no_such_element_when_user_belongs_to_another_tenant() {
+        UUID otherTenantId = UUID.randomUUID();
+        User otherTenantUser = new User(
+                USER_ID, otherTenantId, "other@example.com", "+9999999999",
+                "Other", "User", new UserPreferences(false, false)
+        );
+        when(findUserPort.findById(USER_ID)).thenReturn(Optional.of(otherTenantUser));
+
+        assertThatThrownBy(() -> useCase.execute(
+                USER_ID, "hacked@example.com", null, null, null, null
+        ))
+                .isInstanceOf(NoSuchElementException.class)
+                .hasMessageContaining("User not found");
+
+        verify(saveUserPort, never()).save(any());
+        verify(eventPublisher, never()).publish(any());
+    }
+
+    @Test
     void should_not_publish_event_when_no_fields_changed() {
         when(findUserPort.findById(USER_ID)).thenReturn(Optional.of(existingUser));
         when(saveUserPort.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));

@@ -95,7 +95,25 @@ class DeleteUserUseCaseTest {
     }
 
     @Test
-    @DisplayName("Should delete notification requests before user")
+    @DisplayName("Should throw NoSuchElementException when user belongs to another tenant")
+    void should_throw_no_such_element_when_user_belongs_to_another_tenant() {
+        UUID otherTenantId = UUID.randomUUID();
+        User otherTenantUser = new User(
+                USER_ID, otherTenantId, "other@example.com", "+9999999999",
+                "Other", "User", new UserPreferences(false, false)
+        );
+        when(findUserPort.findById(USER_ID)).thenReturn(Optional.of(otherTenantUser));
+
+        assertThatThrownBy(() -> useCase.execute(USER_ID))
+                .isInstanceOf(NoSuchElementException.class)
+                .hasMessageContaining("User not found");
+
+        verify(deleteNotificationRequestPort, never()).deleteByUserId(any());
+        verify(deleteUserPort, never()).deleteById(any());
+        verify(eventPublisher, never()).publish(any());
+    }
+
+    @Test
     void should_delete_notification_requests_before_user() {
         // This ordering is critical: notification_requests has FK → users.
         // If user is deleted first, FK constraint fails.
