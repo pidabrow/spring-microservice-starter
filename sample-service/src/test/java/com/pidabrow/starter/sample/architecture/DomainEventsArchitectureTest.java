@@ -1,5 +1,6 @@
 package com.pidabrow.starter.sample.architecture;
 
+import com.pidabrow.starter.common.event.DomainEvent;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.lang.ArchRule;
@@ -110,6 +111,28 @@ class DomainEventsArchitectureTest {
                 .should().beInterfaces();
 
         rule.check(importedClasses);
+    }
+
+    @Test
+    @DisplayName("DomainEvent should be a sealed interface")
+    void domain_event_should_be_a_sealed_interface() {
+        // Verify that DomainEvent is sealed by checking the actual Java class
+        Class<?> domainEventClass = DomainEvent.class;
+        
+        // Check if the class is sealed using Java reflection
+        boolean isSealed = domainEventClass.isSealed();
+        org.assertj.core.api.Assertions.assertThat(isSealed)
+                .as("DomainEvent should be a sealed interface")
+                .isTrue();
+        
+        // Verify that all expected event types are in the permits list
+        Class<?>[] permittedSubtypes = domainEventClass.getPermittedSubclasses();
+        var permittedTypeNames = java.util.Arrays.stream(permittedSubtypes)
+                .map(Class::getSimpleName)
+                .toList();
+        org.assertj.core.api.Assertions.assertThat(permittedTypeNames)
+                .as("DomainEvent should permit EntityCreatedEvent, EntityUpdatedEvent, UserCreatedEvent, UserUpdatedEvent, UserDeletedEvent, NotificationRequestedEvent")
+                .contains("EntityCreatedEvent", "EntityUpdatedEvent", "UserCreatedEvent", "UserUpdatedEvent", "UserDeletedEvent", "NotificationRequestedEvent");
     }
 }
 

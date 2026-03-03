@@ -4,6 +4,10 @@ import com.pidabrow.starter.common.actor.ActorContext;
 import com.pidabrow.starter.common.event.DomainEvent;
 import com.pidabrow.starter.common.event.EntityCreatedEvent;
 import com.pidabrow.starter.common.event.EntityUpdatedEvent;
+import com.pidabrow.starter.common.event.NotificationRequestedEvent;
+import com.pidabrow.starter.common.event.UserCreatedEvent;
+import com.pidabrow.starter.common.event.UserDeletedEvent;
+import com.pidabrow.starter.common.event.UserUpdatedEvent;
 import com.pidabrow.starter.common.uuid.UuidV7Generator;
 import jakarta.persistence.*;
 import org.hibernate.annotations.Generated;
@@ -115,13 +119,21 @@ public class AuditLog {
         return switch (event) {
             case EntityCreatedEvent ignored -> "CREATE";
             case EntityUpdatedEvent ignored -> "UPDATE";
+            case UserCreatedEvent ignored -> "CREATE";
+            case UserUpdatedEvent ignored -> "UPDATE";
+            case UserDeletedEvent ignored -> "DELETE";
+            case NotificationRequestedEvent ignored -> "CREATE";
         };
     }
     
     private static String extractChanges(DomainEvent event) {
         return switch (event) {
             case EntityUpdatedEvent updatedEvent -> updatedEvent.delta();
+            case UserUpdatedEvent updatedEvent -> updatedEvent.delta();
             case EntityCreatedEvent ignored -> null;
+            case UserCreatedEvent ignored -> null;
+            case UserDeletedEvent ignored -> null;
+            case NotificationRequestedEvent ignored -> null;
         };
     }
     

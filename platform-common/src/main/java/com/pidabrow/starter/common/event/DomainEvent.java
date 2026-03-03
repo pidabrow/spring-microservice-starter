@@ -12,7 +12,8 @@ import java.util.UUID;
  * and are used for auditing and other cross-cutting concerns.
  */
 public sealed interface DomainEvent
-        permits EntityCreatedEvent, EntityUpdatedEvent {
+        permits EntityCreatedEvent, EntityUpdatedEvent,
+                UserCreatedEvent, UserUpdatedEvent, UserDeletedEvent, NotificationRequestedEvent {
     
     /**
      * The ID of the entity that this event relates to.

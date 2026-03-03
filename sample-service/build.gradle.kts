@@ -7,6 +7,7 @@ dependencies {
     implementation(project(":platform-web"))
     implementation(project(":platform-data"))
     implementation("org.flywaydb:flyway-core")
+    implementation("com.github.java-json-tools:json-patch:1.13")
     
     testImplementation("org.testcontainers:testcontainers")
     testImplementation("org.testcontainers:junit-jupiter")
