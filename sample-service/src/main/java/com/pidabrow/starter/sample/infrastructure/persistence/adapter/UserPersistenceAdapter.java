@@ -6,12 +6,14 @@ import com.pidabrow.starter.sample.application.port.out.SaveUserPort;
 import com.pidabrow.starter.sample.domain.user.User;
 import com.pidabrow.starter.sample.infrastructure.persistence.entity.UserEntity;
 import com.pidabrow.starter.sample.infrastructure.persistence.repository.UserEntityRepository;
+import com.pidabrow.starter.common.tenant.TenantContextHolder;
 import jakarta.persistence.EntityManager;
 import org.hibernate.Session;
 import org.hibernate.Filter;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -60,6 +62,15 @@ class UserPersistenceAdapter implements SaveUserPort, FindUserPort, DeleteUserPo
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<User> findAll() {
+        enableTenantFilter();
+        return repository.findAll().stream()
+                .map(UserEntity::toDomain)
+                .toList();
+    }
+
+    @Override
     @Transactional
     public void deleteById(UUID userId) {
         enableTenantFilter();
@@ -75,7 +86,7 @@ class UserPersistenceAdapter implements SaveUserPort, FindUserPort, DeleteUserPo
     private void enableTenantFilter() {
         Session session = entityManager.unwrap(Session.class);
         Filter filter = session.enableFilter("tenantFilter");
-        filter.setParameter("tenantId", com.pidabrow.starter.common.tenant.TenantContextHolder.getTenantId());
+        filter.setParameter("tenantId", TenantContextHolder.getTenantId());
     }
 }
 

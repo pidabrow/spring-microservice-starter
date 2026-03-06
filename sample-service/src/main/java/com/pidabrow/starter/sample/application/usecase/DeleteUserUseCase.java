@@ -49,9 +49,9 @@ public class DeleteUserUseCase {
         User existingUser = findUserPort.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("User not found: " + userId));
 
-        // Verify tenant isolation
+        // Verify tenant isolation (defense-in-depth; Hibernate filter normally prevents cross-tenant access)
         if (!existingUser.tenantId().equals(tenantId)) {
-            throw new IllegalStateException("User does not belong to current tenant");
+            throw new NoSuchElementException("User not found: " + userId);
         }
 
         // Delete notification requests first (to avoid foreign key constraint violation)
