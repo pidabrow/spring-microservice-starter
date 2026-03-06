@@ -1,5 +1,6 @@
 # ADR-007 — Transactional Outbox for External Integration
 
+**Status:** Accepted  
 **Focus:** Reliability, Eventual Consistency, Traceability  
 
 ## Context
@@ -68,7 +69,11 @@ CREATE INDEX idx_message_outbox_origin ON message_outbox (origin_event_type);
 
 - Batching: Fetch and process records in batches (default 100) to optimize throughput.
 
-- Error Handling: Implement exponential backoff or simple retry count. After X failed attempts, status moves to FAILED.
+- Visibility Buffer: Poll only records where created_at < NOW() - INTERVAL '1 second' to ensure transaction visibility.
+
+- Error Handling: Implement exponential backoff or simple retry count. After 5 failed attempts, status moves to FAILED.
+
+- Retention Policy: Records with status SENT older than 7 days should be purged automatically.
 
 - Testing: Must use Testcontainers (PostgreSQL + Redpanda/Kafka) to verify the full integration chain.
 
