@@ -42,7 +42,7 @@ class OutboxCleanupService {
     @Transactional
     public void cleanup() {
         OffsetDateTime retentionCutoff = OffsetDateTime.now().minusDays(RETENTION_DAYS);
-        int deleted = outboxRepository.deleteSentRecordsOlderThan(retentionCutoff);
+        int deleted = outboxRepository.deleteSentRecordsOlderThan(retentionCutoff, MessageOutboxStatus.SENT);
         if (deleted > 0) {
             log.info("Outbox cleanup: purged {} SENT record(s) older than {} days", deleted, RETENTION_DAYS);
         }

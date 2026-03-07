@@ -7,11 +7,13 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Kafka-based implementation of {@link MessagePublisher}.
@@ -23,6 +25,7 @@ import java.util.Map;
  * This is a package-private infrastructure adapter.
  */
 @Component
+@ConditionalOnProperty(name = "outbox.enabled", havingValue = "true")
 class KafkaMessagePublisher implements MessagePublisher {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaMessagePublisher.class);
@@ -56,6 +59,8 @@ class KafkaMessagePublisher implements MessagePublisher {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new MessagePublishException("Kafka send interrupted for topic=" + destination, e);
+        } catch (ExecutionException e) {
+            throw new MessagePublishException("Failed to publish message to topic=" + destination, e.getCause() != null ? e.getCause() : e);
         } catch (Exception e) {
             throw new MessagePublishException("Failed to publish message to topic=" + destination, e);
         }

@@ -4,7 +4,9 @@ import com.pidabrow.starter.common.outbox.MessagePublisher;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,10 +38,15 @@ class OutboxRelayService {
 
     private final MessageOutboxRepository outboxRepository;
     private final MessagePublisher messagePublisher;
+    private final int batchSize;
 
-    OutboxRelayService(MessageOutboxRepository outboxRepository, MessagePublisher messagePublisher) {
+    OutboxRelayService(
+            MessageOutboxRepository outboxRepository,
+            MessagePublisher messagePublisher,
+            @Value("${outbox.relay.batch-size:100}") int batchSize) {
         this.outboxRepository = outboxRepository;
         this.messagePublisher = messagePublisher;
+        this.batchSize = batchSize;
     }
 
     /**
@@ -55,7 +62,8 @@ class OutboxRelayService {
     @Transactional
     public void relay() {
         OffsetDateTime cutoff = OffsetDateTime.now().minusSeconds(1);
-        List<MessageOutboxEntity> pending = outboxRepository.findPendingMessages(cutoff, MAX_RETRIES);
+        List<MessageOutboxEntity> pending = outboxRepository.findPendingMessages(
+                cutoff, MAX_RETRIES, PageRequest.of(0, batchSize), MessageOutboxStatus.PENDING);
 
         if (pending.isEmpty()) {
             return;

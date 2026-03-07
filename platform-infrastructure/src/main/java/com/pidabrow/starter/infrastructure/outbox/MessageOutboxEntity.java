@@ -46,7 +46,7 @@ class MessageOutboxEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, Object> payload;
 
-    @Column(name = "headers", columnDefinition = "JSONB")
+    @Column(name = "headers", updatable = false, columnDefinition = "JSONB")
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, String> headers;
 
