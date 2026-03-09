@@ -88,6 +88,38 @@ Business actions publish **Application Events** after a successful transaction c
 - Auditing and other cross-cutting concerns react to these events to keep the core logic clean.
 
 ---
+
+## Transactional Outbox (ADR-007)
+
+The **Transactional Outbox** pattern guarantees **At-Least-Once Delivery** of events to external systems (Kafka) without the risk of Dual Write inconsistencies.
+
+### How it works
+
+1. A Use Case publishes a `DomainEvent` via `DomainEventPublisher`.
+2. An `IntegrationEventListener` (`@EventListener`) captures the event **within the same ACID transaction** and persists a `MessageOutboxEntity` record to the `message_outbox` table.
+3. An `OutboxRelayService` (`@Scheduled` + **ShedLock**) polls for `PENDING` records and publishes them to **Kafka** via `KafkaMessagePublisher`.
+4. Upon Kafka ACK, the record status is updated to `SENT`.
+5. An `OutboxCleanupService` purges `SENT` records older than 7 days.
+
+### Implementation Components
+
+- **MessagePublisher** (`platform-common`): Outbound port interface for message publishing.
+- **MessageOutboxEntity** (`platform-infrastructure`): JPA entity with UUID v7 PK, JSONB payload/headers, DB-driven timestamps.
+- **IntegrationEventListener** (`platform-infrastructure`): Maps `DomainEvent` → outbox record in the same transaction.
+- **OutboxRelayService** (`platform-infrastructure`): Polls PENDING records in batches of 100 with a 1-second visibility buffer. Uses ShedLock for distributed coordination.
+- **KafkaMessagePublisher** (`platform-infrastructure`): Publishes to Kafka with `x-tenant-id`, `x-message-type`, and `x-correlation-id` headers.
+- **OutboxCleanupService** (`platform-infrastructure`): Daily retention policy job.
+- **OutboxConfiguration** (`platform-infrastructure`): Enables scheduling and ShedLock; activated by `outbox.enabled=true`.
+
+### Resilience
+
+- **Exponential Backoff**: Failed sends increment `retry_count`; records are skipped until eligible for retry.
+- **Max Retries**: After 5 failed attempts, status moves to `FAILED`.
+- **Dynamic Routing**: The `destination` field on each outbox record determines the Kafka topic.
+
+All infrastructure adapter classes are **package-private** (enforced by ArchUnit).
+
+---
 ## Auditing
 
 Auditing is **event-driven and append-only**:

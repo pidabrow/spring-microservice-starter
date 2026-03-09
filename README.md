@@ -6,6 +6,10 @@ An opinionated Spring Boot 3 microservice starter monorepo using Gradle (Kotlin 
 
 This project provides a foundation for building microservices with Spring Boot 3, following a modular monorepo structure with shared platform modules and service implementations.
 
+## Architectural Guides
+
+To understand our approach to distributed consistency, see the [Transactional Outbox Guide](docs/flows/transactional-outbox-flow.md).
+
 ## Technology Stack
 
 - **Java**: 21
