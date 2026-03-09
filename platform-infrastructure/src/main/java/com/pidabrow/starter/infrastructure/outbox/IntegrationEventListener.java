@@ -48,10 +48,13 @@ class IntegrationEventListener {
 
         Map<String, Object> payload = serializeEvent(event);
 
+        // Extract correlation ID from event if available (UserCreatedEvent), otherwise generate new one
+        UUID correlationId = extractCorrelationId(event);
+
         Map<String, String> headers = Map.of(
                 "x-tenant-id", tenantId.toString(),
                 "x-message-type", messageType,
-                "x-correlation-id", UuidV7Generator.generate().toString()
+                "x-correlation-id", correlationId.toString()
         );
 
         MessageOutboxEntity outboxRecord = MessageOutboxEntity.create(
@@ -65,13 +68,22 @@ class IntegrationEventListener {
         );
 
         outboxRepository.save(outboxRecord);
-        log.debug("Outbox record created: type={}, destination={}, entityId={}",
-                messageType, destination, partitionKey);
+        log.debug("Outbox record created: type={}, destination={}, entityId={}, correlationId={}",
+                messageType, destination, partitionKey, correlationId);
+    }
+    
+    private UUID extractCorrelationId(DomainEvent event) {
+        // UserCreatedEvent carries correlation ID from HTTP request
+        if (event instanceof com.pidabrow.starter.common.event.UserCreatedEvent userCreatedEvent) {
+            return userCreatedEvent.correlationId();
+        }
+        // For other events, generate a new correlation ID
+        return UuidV7Generator.generate();
     }
 
     private String resolveMessageType(DomainEvent event) {
         return switch (event) {
-            case UserCreatedEvent ignored -> "USER_CREATED";
+            case UserCreatedEvent ignored -> "WELCOME_EMAIL_REQUEST";
             case UserUpdatedEvent ignored -> "USER_UPDATED";
             case UserDeletedEvent ignored -> "USER_DELETED";
             case EntityCreatedEvent ignored -> "ENTITY_CREATED";
@@ -82,6 +94,7 @@ class IntegrationEventListener {
 
     private String resolveDestination(DomainEvent event) {
         return switch (event) {
+            case UserCreatedEvent ignored -> "notification-events";
             case NotificationRequestedEvent ignored -> "notification-events";
             default -> DEFAULT_DESTINATION;
         };

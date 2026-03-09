@@ -69,7 +69,8 @@ public class UpdateUserUseCase {
                 phoneNumber != null ? phoneNumber : existingUser.phoneNumber(),
                 firstName != null ? firstName : existingUser.firstName(),
                 lastName != null ? lastName : existingUser.lastName(),
-                preferences != null ? preferences : existingUser.preferences()
+                preferences != null ? preferences : existingUser.preferences(),
+                existingUser.passwordHash() // Preserve password hash
         );
 
         // Generate JSON Patch delta

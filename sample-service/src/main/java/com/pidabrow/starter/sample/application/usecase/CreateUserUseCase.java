@@ -1,5 +1,6 @@
 package com.pidabrow.starter.sample.application.usecase;
 
+import com.pidabrow.starter.common.correlation.CorrelationContextHolder;
 import com.pidabrow.starter.common.event.DomainEventPublisher;
 import com.pidabrow.starter.common.event.NotificationRequestedEvent;
 import com.pidabrow.starter.common.event.UserCreatedEvent;
@@ -78,7 +79,8 @@ public class CreateUserUseCase {
 
         // Publish domain events (will be handled AFTER_COMMIT)
         // 1. UserCreatedEvent for the user creation
-        UserCreatedEvent userCreatedEvent = UserCreatedEvent.of(savedUser.id(), tenantId);
+        java.util.UUID correlationId = CorrelationContextHolder.getCorrelationId();
+        UserCreatedEvent userCreatedEvent = UserCreatedEvent.of(savedUser.id(), tenantId, correlationId);
         eventPublisher.publish(userCreatedEvent);
 
         // 2. NotificationRequestedEvent for the notification outbox entry

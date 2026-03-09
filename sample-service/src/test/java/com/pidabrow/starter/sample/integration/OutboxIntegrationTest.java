@@ -138,11 +138,11 @@ class OutboxIntegrationTest {
         List<Map<String, Object>> outboxRecords = queryOutboxRecords();
         assertThat(outboxRecords).isNotEmpty();
 
-        // Should have at least USER_CREATED and NOTIFICATION_REQUESTED
+        // Should have at least WELCOME_EMAIL_REQUEST (from UserCreatedEvent) and NOTIFICATION_REQUESTED
         List<String> messageTypes = outboxRecords.stream()
                 .map(r -> (String) r.get("message_type"))
                 .toList();
-        assertThat(messageTypes).contains("USER_CREATED", "NOTIFICATION_REQUESTED");
+        assertThat(messageTypes).contains("WELCOME_EMAIL_REQUEST", "NOTIFICATION_REQUESTED");
 
         // All records should be PENDING
         outboxRecords.forEach(record ->
@@ -202,7 +202,7 @@ class OutboxIntegrationTest {
                     .until(() -> {
                         ConsumerRecords<String, String> polled = consumer.poll(Duration.ofMillis(500));
                         polled.forEach(receivedRecords::add);
-                        return receivedRecords.size() >= 2; // USER_CREATED + NOTIFICATION_REQUESTED
+                        return receivedRecords.size() >= 2; // WELCOME_EMAIL_REQUEST + NOTIFICATION_REQUESTED
                     });
 
             // Then: messages have correct headers

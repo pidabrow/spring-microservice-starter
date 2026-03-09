@@ -1,12 +1,14 @@
 package com.pidabrow.starter.sample.api.controller;
 
 import com.pidabrow.starter.sample.api.dto.CreateUserRequest;
+import com.pidabrow.starter.sample.api.dto.RegisterUserRequest;
 import com.pidabrow.starter.sample.api.dto.UpdateUserRequest;
 import com.pidabrow.starter.sample.api.dto.UserPreferencesDto;
 import com.pidabrow.starter.sample.api.dto.UserResponse;
 import com.pidabrow.starter.sample.application.usecase.CreateUserUseCase;
 import com.pidabrow.starter.sample.application.usecase.DeleteUserUseCase;
 import com.pidabrow.starter.sample.application.usecase.FindUsersUseCase;
+import com.pidabrow.starter.sample.application.usecase.RegisterUserUseCase;
 import com.pidabrow.starter.sample.application.usecase.UpdateUserUseCase;
 import com.pidabrow.starter.sample.domain.user.User;
 import com.pidabrow.starter.sample.domain.user.UserPreferences;
@@ -29,16 +31,19 @@ import java.util.UUID;
 public class UserController {
 
     private final CreateUserUseCase createUserUseCase;
+    private final RegisterUserUseCase registerUserUseCase;
     private final FindUsersUseCase findUsersUseCase;
     private final UpdateUserUseCase updateUserUseCase;
     private final DeleteUserUseCase deleteUserUseCase;
 
     public UserController(
             CreateUserUseCase createUserUseCase,
+            RegisterUserUseCase registerUserUseCase,
             FindUsersUseCase findUsersUseCase,
             UpdateUserUseCase updateUserUseCase,
             DeleteUserUseCase deleteUserUseCase) {
         this.createUserUseCase = createUserUseCase;
+        this.registerUserUseCase = registerUserUseCase;
         this.findUsersUseCase = findUsersUseCase;
         this.updateUserUseCase = updateUserUseCase;
         this.deleteUserUseCase = deleteUserUseCase;
@@ -57,6 +62,19 @@ public class UserController {
                 request.firstName(),
                 request.lastName(),
                 preferences
+        );
+
+        UserResponse response = toResponse(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody RegisterUserRequest request) {
+        User user = registerUserUseCase.execute(
+                request.email(),
+                request.password(),
+                request.firstName(),
+                request.lastName()
         );
 
         UserResponse response = toResponse(user);

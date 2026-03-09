@@ -54,8 +54,8 @@ class FindUsersUseCaseTest {
     @Test
     @DisplayName("Should return all users for current tenant")
     void should_return_all_users_for_current_tenant() {
-        User user1 = new User(UUID.randomUUID(), TENANT_ID, "a@example.com", "+111", "A", "User", new UserPreferences(true, false));
-        User user2 = new User(UUID.randomUUID(), TENANT_ID, "b@example.com", "+222", "B", "User", new UserPreferences(false, true));
+        User user1 = new User(UUID.randomUUID(), TENANT_ID, "a@example.com", "+111", "A", "User", new UserPreferences(true, false), null);
+        User user2 = new User(UUID.randomUUID(), TENANT_ID, "b@example.com", "+222", "B", "User", new UserPreferences(false, true), null);
         when(findUserPort.findAll()).thenReturn(List.of(user1, user2));
 
         List<User> result = useCase.findAll();
@@ -77,7 +77,7 @@ class FindUsersUseCaseTest {
     @Test
     @DisplayName("Should return user when found by ID")
     void should_return_user_when_found_by_id() {
-        User user = new User(USER_ID, TENANT_ID, "test@example.com", "+123", "John", "Doe", new UserPreferences(true, true));
+        User user = new User(USER_ID, TENANT_ID, "test@example.com", "+123", "John", "Doe", new UserPreferences(true, true), null);
         when(findUserPort.findById(USER_ID)).thenReturn(Optional.of(user));
 
         User result = useCase.findById(USER_ID);

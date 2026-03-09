@@ -11,7 +11,8 @@ public record UserCreatedEvent(
         UUID entityId,
         UUID tenantId,
         String entityType,
-        Instant occurredAt
+        Instant occurredAt,
+        UUID correlationId
 ) implements DomainEvent {
     
     public UserCreatedEvent {
@@ -27,10 +28,13 @@ public record UserCreatedEvent(
         if (occurredAt == null) {
             throw new IllegalArgumentException("Occurred at cannot be null");
         }
+        if (correlationId == null) {
+            throw new IllegalArgumentException("Correlation ID cannot be null");
+        }
     }
     
-    public static UserCreatedEvent of(UUID userId, UUID tenantId) {
-        return new UserCreatedEvent(userId, tenantId, "User", Instant.now());
+    public static UserCreatedEvent of(UUID userId, UUID tenantId, UUID correlationId) {
+        return new UserCreatedEvent(userId, tenantId, "User", Instant.now(), correlationId);
     }
 }
 

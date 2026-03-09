@@ -71,7 +71,7 @@ class DeleteUserUseCaseTest {
 
         existingUser = new User(
                 USER_ID, TENANT_ID, "john@example.com", "+1234567890",
-                "John", "Doe", new UserPreferences(true, false)
+                "John", "Doe", new UserPreferences(true, false), null
         );
     }
 
@@ -100,7 +100,7 @@ class DeleteUserUseCaseTest {
         UUID otherTenantId = UUID.randomUUID();
         User otherTenantUser = new User(
                 USER_ID, otherTenantId, "other@example.com", "+9999999999",
-                "Other", "User", new UserPreferences(false, false)
+                "Other", "User", new UserPreferences(false, false), null
         );
         when(findUserPort.findById(USER_ID)).thenReturn(Optional.of(otherTenantUser));
 

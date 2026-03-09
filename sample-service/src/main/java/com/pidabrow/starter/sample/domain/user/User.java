@@ -14,7 +14,8 @@ public record User(
         String phoneNumber,
         String firstName,
         String lastName,
-        UserPreferences preferences
+        UserPreferences preferences,
+        String passwordHash
 ) {
 
     public static final String ENTITY_TYPE = "User";
@@ -41,6 +42,7 @@ public record User(
         if (preferences == null) {
             throw new IllegalArgumentException("preferences must not be null");
         }
+        // passwordHash can be null for users created without password (e.g., via CreateUserUseCase)
     }
 
     /**
@@ -57,7 +59,28 @@ public record User(
             UserPreferences preferences
     ) {
         UUID id = UuidV7Generator.generate();
-        return new User(id, tenantId, email, phoneNumber, firstName, lastName, preferences);
+        return new User(id, tenantId, email, phoneNumber, firstName, lastName, preferences, null);
+    }
+    
+    /**
+     * Factory method creating a new User instance with password hash for registration.
+     * <p>
+     * The user is "born" with a UUID v7 identifier to align with persistence rules.
+     */
+    public static User createWithPassword(
+            UUID tenantId,
+            String email,
+            String phoneNumber,
+            String firstName,
+            String lastName,
+            UserPreferences preferences,
+            String passwordHash
+    ) {
+        UUID id = UuidV7Generator.generate();
+        if (passwordHash == null || passwordHash.isBlank()) {
+            throw new IllegalArgumentException("passwordHash must not be null or blank");
+        }
+        return new User(id, tenantId, email, phoneNumber, firstName, lastName, preferences, passwordHash);
     }
 }
 
