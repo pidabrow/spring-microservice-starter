@@ -14,9 +14,10 @@ class SecurityConfiguration {
     /**
      * BCrypt password encoder with cost factor 12.
      * This provides ~250-500ms delay per check to thwart brute-force attacks.
+     * Exposed as BCryptPasswordEncoder so the adapter can inject it without casting.
      */
     @Bean
-    org.springframework.security.crypto.password.PasswordEncoder passwordEncoder() {
+    BCryptPasswordEncoder bcryptPasswordEncoder() {
         return new BCryptPasswordEncoder(12);
     }
 }

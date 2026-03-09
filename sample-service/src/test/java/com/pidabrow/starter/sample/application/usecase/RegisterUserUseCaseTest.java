@@ -22,6 +22,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.UUID;
 
@@ -233,6 +234,25 @@ class RegisterUserUseCaseTest {
         assertThat(savedUser.preferences()).isNotNull();
         assertThat(savedUser.preferences().emailEnabled()).isTrue();
         assertThat(savedUser.preferences().smsEnabled()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should map DataIntegrityViolationException to UserAlreadyExistsException (race condition)")
+    void should_map_data_integrity_violation_to_user_already_exists_exception() {
+        // Given — simulates a concurrent registration where the DB unique constraint fires
+        // even though the pre-save existsByEmail check passed (classic check-then-act race)
+        String email = "race@example.com";
+        when(checkUserExistsPort.existsByEmail(email)).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$12$hash");
+        when(saveUserPort.save(any(User.class)))
+                .thenThrow(new DataIntegrityViolationException("unique constraint violation"));
+
+        // When & Then
+        assertThatThrownBy(() -> useCase.execute(email, "password", "John", "Doe"))
+                .isInstanceOf(UserAlreadyExistsException.class)
+                .hasMessageContaining("already exists");
+
+        verify(eventPublisher, never()).publish(any());
     }
 }
 

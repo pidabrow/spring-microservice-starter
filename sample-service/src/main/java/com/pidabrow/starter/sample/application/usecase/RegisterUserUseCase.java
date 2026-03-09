@@ -73,12 +73,10 @@ public class RegisterUserUseCase {
 
         // 4. Create user domain object with password hash
         UserPreferences defaultPreferences = new UserPreferences(true, false);
-        // Use a placeholder phone number for registration (can be updated later)
-        String placeholderPhoneNumber = "+0000000000";
         User user = User.createWithPassword(
                 tenantId,
                 normalizedEmail,
-                placeholderPhoneNumber,
+                null,
                 firstName,
                 lastName,
                 defaultPreferences,

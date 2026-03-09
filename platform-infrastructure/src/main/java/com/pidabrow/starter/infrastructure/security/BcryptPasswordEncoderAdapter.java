@@ -13,11 +13,8 @@ class BcryptPasswordEncoderAdapter implements PasswordEncoder {
     
     private final BCryptPasswordEncoder delegate;
     
-    BcryptPasswordEncoderAdapter(org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
-        if (!(passwordEncoder instanceof BCryptPasswordEncoder)) {
-            throw new IllegalArgumentException("PasswordEncoder must be BCryptPasswordEncoder");
-        }
-        this.delegate = (BCryptPasswordEncoder) passwordEncoder;
+    BcryptPasswordEncoderAdapter(BCryptPasswordEncoder bcryptPasswordEncoder) {
+        this.delegate = bcryptPasswordEncoder;
     }
     
     @Override
