@@ -104,18 +104,17 @@ class UserTest {
     }
 
     @Test
-    @DisplayName("Should throw when phoneNumber is null")
-    void should_throw_when_phone_number_is_null() {
-        assertThatThrownBy(() -> new User(
+    @DisplayName("Should allow null phoneNumber (optional for registered users)")
+    void should_allow_null_phone_number() {
+        User user = new User(
                 VALID_ID, VALID_TENANT_ID, VALID_EMAIL,
                 null, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_PREFERENCES, null
-        ))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("phoneNumber must not be blank");
+        );
+        assertThat(user.phoneNumber()).isNull();
     }
 
     @Test
-    @DisplayName("Should throw when phoneNumber is blank")
+    @DisplayName("Should throw when phoneNumber is blank (empty string)")
     void should_throw_when_phone_number_is_blank() {
         assertThatThrownBy(() -> new User(
                 VALID_ID, VALID_TENANT_ID, VALID_EMAIL,

@@ -9,8 +9,10 @@ import org.springframework.stereotype.Component;
  * Spring-based adapter for DomainEventPublisher port.
  * This is an outbound adapter that publishes events using Spring's ApplicationEventPublisher.
  * 
- * Events published through this adapter will be handled by listeners using
- * @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT).
+ * Events published through this adapter are dispatched synchronously within the
+ * current transaction via {@code @EventListener} (see {@code IntegrationEventListener}).
+ * This guarantees that the Outbox write and the business change share the same ACID
+ * transaction, eliminating the Dual-Write problem described in ADR-007.
  */
 @Component
 class SpringDomainEventPublisher implements DomainEventPublisher {

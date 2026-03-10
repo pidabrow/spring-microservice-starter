@@ -77,7 +77,7 @@ public class CreateUserUseCase {
         // Save notification request (same transaction)
         NotificationRequest savedNotificationRequest = saveNotificationRequestPort.save(notificationRequest);
 
-        // Publish domain events (will be handled AFTER_COMMIT)
+        // Publish domain events (handled in-transaction by @EventListener to write Outbox records)
         // 1. UserCreatedEvent for the user creation
         java.util.UUID correlationId = CorrelationContextHolder.getCorrelationId();
         UserCreatedEvent userCreatedEvent = UserCreatedEvent.of(savedUser.id(), tenantId, correlationId);

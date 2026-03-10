@@ -30,8 +30,9 @@ public record User(
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("email must not be blank");
         }
-        if (phoneNumber == null || phoneNumber.isBlank()) {
-            throw new IllegalArgumentException("phoneNumber must not be blank");
+        // phoneNumber is optional (null is allowed for registered users who have not provided one)
+        if (phoneNumber != null && phoneNumber.isBlank()) {
+            throw new IllegalArgumentException("phoneNumber must not be blank when provided");
         }
         if (firstName == null || firstName.isBlank()) {
             throw new IllegalArgumentException("firstName must not be blank");
