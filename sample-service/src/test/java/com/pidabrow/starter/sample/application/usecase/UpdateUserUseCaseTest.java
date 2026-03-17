@@ -67,7 +67,7 @@ class UpdateUserUseCaseTest {
 
         existingUser = new User(
                 USER_ID, TENANT_ID, "old@example.com", "+1111111111",
-                "OldFirst", "OldLast", new UserPreferences(true, false)
+                "OldFirst", "OldLast", new UserPreferences(true, false), null
         );
     }
 
@@ -99,7 +99,7 @@ class UpdateUserUseCaseTest {
         UUID otherTenantId = UUID.randomUUID();
         User otherTenantUser = new User(
                 USER_ID, otherTenantId, "other@example.com", "+9999999999",
-                "Other", "User", new UserPreferences(false, false)
+                "Other", "User", new UserPreferences(false, false), null
         );
         when(findUserPort.findById(USER_ID)).thenReturn(Optional.of(otherTenantUser));
 

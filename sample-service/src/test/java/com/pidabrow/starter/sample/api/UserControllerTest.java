@@ -6,6 +6,7 @@ import com.pidabrow.starter.common.tenant.TenantContextHolder;
 import com.pidabrow.starter.data.entity.Tenant;
 import com.pidabrow.starter.sample.MicroserviceStarterApplication;
 import com.pidabrow.starter.sample.api.dto.CreateUserRequest;
+import com.pidabrow.starter.sample.api.dto.RegisterUserRequest;
 import com.pidabrow.starter.sample.api.dto.UpdateUserRequest;
 import com.pidabrow.starter.sample.api.dto.UserPreferencesDto;
 import jakarta.persistence.EntityManager;
@@ -346,6 +347,122 @@ class UserControllerTest {
             mockMvc.perform(delete("/api/v1/users/{id}", UUID.randomUUID())
                             .header("X-Tenant-Id", tenantAId.toString()))
                     .andExpect(status().isNotFound());
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/v1/users/register")
+    class RegisterUser {
+
+        @Test
+        @DisplayName("Should register user successfully and return 201")
+        void should_register_user_successfully_and_return_201() throws Exception {
+            RegisterUserRequest request = new RegisterUserRequest(
+                    "newuser@example.com",
+                    "SecurePassword123!",
+                    "Alice",
+                    "Wonderland"
+            );
+
+            mockMvc.perform(post("/api/v1/users/register")
+                            .header("X-Tenant-Id", tenantAId.toString())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id").exists())
+                    .andExpect(jsonPath("$.tenantId").value(tenantAId.toString()))
+                    .andExpect(jsonPath("$.email").value("newuser@example.com"))
+                    .andExpect(jsonPath("$.firstName").value("Alice"))
+                    .andExpect(jsonPath("$.lastName").value("Wonderland"));
+        }
+
+        @Test
+        @DisplayName("Should normalise email to lowercase on registration")
+        void should_normalise_email_to_lowercase_on_registration() throws Exception {
+            RegisterUserRequest request = new RegisterUserRequest(
+                    "UPPER@EXAMPLE.COM",
+                    "SecurePassword123!",
+                    "Bob",
+                    "Builder"
+            );
+
+            mockMvc.perform(post("/api/v1/users/register")
+                            .header("X-Tenant-Id", tenantAId.toString())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.email").value("upper@example.com"));
+        }
+
+        @Test
+        @DisplayName("Should return 409 when email is already registered in the same tenant")
+        void should_return_409_when_email_already_registered() throws Exception {
+            RegisterUserRequest request = new RegisterUserRequest(
+                    "duplicate@example.com",
+                    "SecurePassword123!",
+                    "Carol",
+                    "Danvers"
+            );
+
+            // First registration succeeds
+            mockMvc.perform(post("/api/v1/users/register")
+                            .header("X-Tenant-Id", tenantAId.toString())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isCreated());
+
+            // Second registration with the same email must be rejected
+            mockMvc.perform(post("/api/v1/users/register")
+                            .header("X-Tenant-Id", tenantAId.toString())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isConflict());
+        }
+
+        @Test
+        @DisplayName("Should return 400 when password is too short")
+        void should_return_400_when_password_is_too_short() throws Exception {
+            RegisterUserRequest request = new RegisterUserRequest(
+                    "short@example.com",
+                    "short",
+                    "Dave",
+                    "Smith"
+            );
+
+            mockMvc.perform(post("/api/v1/users/register")
+                            .header("X-Tenant-Id", tenantAId.toString())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("Should return 400 when required fields are missing")
+        void should_return_400_when_required_fields_missing() throws Exception {
+            // Missing email and password
+            String invalidJson = "{\"firstName\":\"Dave\",\"lastName\":\"Smith\"}";
+
+            mockMvc.perform(post("/api/v1/users/register")
+                            .header("X-Tenant-Id", tenantAId.toString())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(invalidJson))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("Should return 400 when tenant header is missing")
+        void should_return_400_when_tenant_header_is_missing() throws Exception {
+            RegisterUserRequest request = new RegisterUserRequest(
+                    "notenant@example.com",
+                    "SecurePassword123!",
+                    "Eve",
+                    "Adams"
+            );
+
+            mockMvc.perform(post("/api/v1/users/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
         }
     }
 

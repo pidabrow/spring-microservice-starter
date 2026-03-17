@@ -60,7 +60,7 @@ public class DeleteUserUseCase {
         // Delete user
         deleteUserPort.deleteById(userId);
 
-        // Publish domain event (will be handled AFTER_COMMIT)
+        // Publish domain event (handled in-transaction by @EventListener to write Outbox record)
         UserDeletedEvent event = UserDeletedEvent.of(userId, tenantId);
         eventPublisher.publish(event);
     }

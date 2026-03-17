@@ -69,7 +69,8 @@ public class UpdateUserUseCase {
                 phoneNumber != null ? phoneNumber : existingUser.phoneNumber(),
                 firstName != null ? firstName : existingUser.firstName(),
                 lastName != null ? lastName : existingUser.lastName(),
-                preferences != null ? preferences : existingUser.preferences()
+                preferences != null ? preferences : existingUser.preferences(),
+                existingUser.passwordHash() // Preserve password hash
         );
 
         // Generate JSON Patch delta
@@ -78,7 +79,7 @@ public class UpdateUserUseCase {
         // Save updated user
         User savedUser = saveUserPort.save(updatedUser);
 
-        // Publish domain event only if there are actual changes (will be handled AFTER_COMMIT)
+        // Publish domain event only if there are actual changes (handled in-transaction by @EventListener to write Outbox record)
         if (!EMPTY_JSON_PATCH.equals(delta)) {
             UserUpdatedEvent event = UserUpdatedEvent.of(savedUser.id(), tenantId, delta);
             eventPublisher.publish(event);

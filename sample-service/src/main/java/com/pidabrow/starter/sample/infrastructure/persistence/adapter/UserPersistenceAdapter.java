@@ -1,5 +1,6 @@
 package com.pidabrow.starter.sample.infrastructure.persistence.adapter;
 
+import com.pidabrow.starter.sample.application.port.out.CheckUserExistsPort;
 import com.pidabrow.starter.sample.application.port.out.DeleteUserPort;
 import com.pidabrow.starter.sample.application.port.out.FindUserPort;
 import com.pidabrow.starter.sample.application.port.out.SaveUserPort;
@@ -22,7 +23,7 @@ import java.util.UUID;
  * This is a package-private implementation detail.
  */
 @Component
-class UserPersistenceAdapter implements SaveUserPort, FindUserPort, DeleteUserPort {
+class UserPersistenceAdapter implements SaveUserPort, FindUserPort, DeleteUserPort, CheckUserExistsPort {
 
     private final UserEntityRepository repository;
     private final EntityManager entityManager;
@@ -81,6 +82,13 @@ class UserPersistenceAdapter implements SaveUserPort, FindUserPort, DeleteUserPo
         // Update fields using package-private method
         // This maintains immutability principles while allowing JPA updates
         entity.updateFromDomain(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByEmail(String email) {
+        enableTenantFilter();
+        return repository.existsByEmail(email);
     }
 
     private void enableTenantFilter() {

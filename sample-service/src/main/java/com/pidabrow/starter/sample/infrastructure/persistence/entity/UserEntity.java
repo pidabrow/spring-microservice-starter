@@ -21,7 +21,7 @@ public class UserEntity extends TenantScopedEntity {
     @Column(name = "email", nullable = false)
     private String email;
 
-    @Column(name = "phone_number", nullable = false)
+    @Column(name = "phone_number")
     private String phoneNumber;
 
     @Column(name = "first_name", nullable = false)
@@ -34,6 +34,9 @@ public class UserEntity extends TenantScopedEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, Object> preferences;
 
+    @Column(name = "password_hash")
+    private String passwordHash;
+
     protected UserEntity() {
         // Protected no-args constructor for JPA
     }
@@ -43,12 +46,14 @@ public class UserEntity extends TenantScopedEntity {
             String phoneNumber,
             String firstName,
             String lastName,
-            Map<String, Object> preferences) {
+            Map<String, Object> preferences,
+            String passwordHash) {
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.firstName = firstName;
         this.lastName = lastName;
         this.preferences = preferences;
+        this.passwordHash = passwordHash;
     }
 
     public static UserEntity fromDomain(User user) {
@@ -60,7 +65,8 @@ public class UserEntity extends TenantScopedEntity {
                 Map.of(
                         "emailEnabled", user.preferences().emailEnabled(),
                         "smsEnabled", user.preferences().smsEnabled()
-                )
+                ),
+                user.passwordHash()
         );
         entity.initId(user.id());
         return entity;
@@ -81,7 +87,8 @@ public class UserEntity extends TenantScopedEntity {
                 phoneNumber,
                 firstName,
                 lastName,
-                userPreferences
+                userPreferences,
+                passwordHash
         );
     }
 
@@ -119,6 +126,11 @@ public class UserEntity extends TenantScopedEntity {
                 "emailEnabled", user.preferences().emailEnabled(),
                 "smsEnabled", user.preferences().smsEnabled()
         );
+        this.passwordHash = user.passwordHash();
+    }
+    
+    public String getPasswordHash() {
+        return passwordHash;
     }
 }
 

@@ -34,7 +34,7 @@ class UserTest {
     void should_create_user_with_all_valid_fields() {
         User user = new User(
                 VALID_ID, VALID_TENANT_ID, VALID_EMAIL,
-                VALID_PHONE, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_PREFERENCES
+                VALID_PHONE, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_PREFERENCES, null
         );
 
         assertThat(user.id()).isEqualTo(VALID_ID);
@@ -64,7 +64,7 @@ class UserTest {
     void should_throw_when_id_is_null() {
         assertThatThrownBy(() -> new User(
                 null, VALID_TENANT_ID, VALID_EMAIL,
-                VALID_PHONE, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_PREFERENCES
+                VALID_PHONE, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_PREFERENCES, null
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("id must not be null");
@@ -75,7 +75,7 @@ class UserTest {
     void should_throw_when_tenant_id_is_null() {
         assertThatThrownBy(() -> new User(
                 VALID_ID, null, VALID_EMAIL,
-                VALID_PHONE, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_PREFERENCES
+                VALID_PHONE, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_PREFERENCES, null
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("tenantId must not be null");
@@ -86,7 +86,7 @@ class UserTest {
     void should_throw_when_email_is_null() {
         assertThatThrownBy(() -> new User(
                 VALID_ID, VALID_TENANT_ID, null,
-                VALID_PHONE, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_PREFERENCES
+                VALID_PHONE, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_PREFERENCES, null
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("email must not be blank");
@@ -97,29 +97,28 @@ class UserTest {
     void should_throw_when_email_is_blank() {
         assertThatThrownBy(() -> new User(
                 VALID_ID, VALID_TENANT_ID, "   ",
-                VALID_PHONE, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_PREFERENCES
+                VALID_PHONE, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_PREFERENCES, null
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("email must not be blank");
     }
 
     @Test
-    @DisplayName("Should throw when phoneNumber is null")
-    void should_throw_when_phone_number_is_null() {
-        assertThatThrownBy(() -> new User(
+    @DisplayName("Should allow null phoneNumber (optional for registered users)")
+    void should_allow_null_phone_number() {
+        User user = new User(
                 VALID_ID, VALID_TENANT_ID, VALID_EMAIL,
-                null, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_PREFERENCES
-        ))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("phoneNumber must not be blank");
+                null, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_PREFERENCES, null
+        );
+        assertThat(user.phoneNumber()).isNull();
     }
 
     @Test
-    @DisplayName("Should throw when phoneNumber is blank")
+    @DisplayName("Should throw when phoneNumber is blank (empty string)")
     void should_throw_when_phone_number_is_blank() {
         assertThatThrownBy(() -> new User(
                 VALID_ID, VALID_TENANT_ID, VALID_EMAIL,
-                " ", VALID_FIRST_NAME, VALID_LAST_NAME, VALID_PREFERENCES
+                " ", VALID_FIRST_NAME, VALID_LAST_NAME, VALID_PREFERENCES, null
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("phoneNumber must not be blank");
@@ -130,7 +129,7 @@ class UserTest {
     void should_throw_when_first_name_is_null() {
         assertThatThrownBy(() -> new User(
                 VALID_ID, VALID_TENANT_ID, VALID_EMAIL,
-                VALID_PHONE, null, VALID_LAST_NAME, VALID_PREFERENCES
+                VALID_PHONE, null, VALID_LAST_NAME, VALID_PREFERENCES, null
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("firstName must not be blank");
@@ -141,7 +140,7 @@ class UserTest {
     void should_throw_when_first_name_is_blank() {
         assertThatThrownBy(() -> new User(
                 VALID_ID, VALID_TENANT_ID, VALID_EMAIL,
-                VALID_PHONE, "", VALID_LAST_NAME, VALID_PREFERENCES
+                VALID_PHONE, "", VALID_LAST_NAME, VALID_PREFERENCES, null
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("firstName must not be blank");
@@ -152,7 +151,7 @@ class UserTest {
     void should_throw_when_last_name_is_null() {
         assertThatThrownBy(() -> new User(
                 VALID_ID, VALID_TENANT_ID, VALID_EMAIL,
-                VALID_PHONE, VALID_FIRST_NAME, null, VALID_PREFERENCES
+                VALID_PHONE, VALID_FIRST_NAME, null, VALID_PREFERENCES, null
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("lastName must not be blank");
@@ -163,7 +162,7 @@ class UserTest {
     void should_throw_when_preferences_is_null() {
         assertThatThrownBy(() -> new User(
                 VALID_ID, VALID_TENANT_ID, VALID_EMAIL,
-                VALID_PHONE, VALID_FIRST_NAME, VALID_LAST_NAME, null
+                VALID_PHONE, VALID_FIRST_NAME, VALID_LAST_NAME, null, null
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("preferences must not be null");

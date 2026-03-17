@@ -22,5 +22,15 @@ public interface UserEntityRepository extends JpaRepository<UserEntity, UUID> {
      */
     @Query("SELECT u FROM UserEntity u WHERE u.id = :id")
     Optional<UserEntity> findById(@Param("id") @org.springframework.lang.NonNull UUID id);
+    
+    /**
+     * Checks if a user with the given email exists within the current tenant context.
+     * Tenant isolation is enforced automatically via Hibernate filter.
+     * 
+     * @param email the email to check
+     * @return true if a user with the email exists, false otherwise
+     */
+    @Query("SELECT COUNT(u) > 0 FROM UserEntity u WHERE LOWER(u.email) = LOWER(:email)")
+    boolean existsByEmail(@Param("email") String email);
 }
 
