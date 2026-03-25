@@ -8,6 +8,7 @@ import com.pidabrow.starter.data.entity.AuditLog;
 import com.pidabrow.starter.data.entity.Tenant;
 import com.pidabrow.starter.data.repository.AuditLogRepository;
 import com.pidabrow.starter.sample.MicroserviceStarterApplication;
+import com.pidabrow.starter.testing.AbstractIntegrationTest;
 import com.pidabrow.starter.sample.application.usecase.CreateUserUseCase;
 import com.pidabrow.starter.sample.application.usecase.DeleteUserUseCase;
 import com.pidabrow.starter.sample.application.usecase.UpdateUserUseCase;
@@ -22,14 +23,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -46,23 +41,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * - Cascade delete of notification requests before user
  */
 @SpringBootTest(classes = MicroserviceStarterApplication.class)
-@Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @DisplayName("User update/delete integration tests")
-class UserUpdateDeleteIntegrationTest {
-
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
-            .withDatabaseName("test_db")
-            .withUsername("test_user")
-            .withPassword("test_pass");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+class UserUpdateDeleteIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private CreateUserUseCase createUserUseCase;

@@ -4,6 +4,8 @@ import com.pidabrow.starter.common.tenant.TenantContext;
 import com.pidabrow.starter.common.tenant.TenantContextHolder;
 import com.pidabrow.starter.data.entity.Tenant;
 import com.pidabrow.starter.sample.MicroserviceStarterApplication;
+import com.pidabrow.starter.testing.AbstractIntegrationTest;
+import com.pidabrow.starter.testing.assertions.TenantIsolationAssertions;
 import com.pidabrow.starter.sample.application.port.out.SaveNotificationRequestPort;
 import com.pidabrow.starter.sample.application.usecase.CreateUserUseCase;
 import com.pidabrow.starter.sample.domain.user.User;
@@ -20,15 +22,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -46,22 +42,8 @@ import static org.mockito.Mockito.doThrow;
  * - Rollback occurs if notification save fails
  */
 @SpringBootTest(classes = MicroserviceStarterApplication.class)
-@Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class UserCreationIntegrationTest {
-
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
-            .withDatabaseName("test_db")
-            .withUsername("test_user")
-            .withPassword("test_pass");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+class UserCreationIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private CreateUserUseCase createUserUseCase;
@@ -108,9 +90,7 @@ class UserCreationIntegrationTest {
     void should_create_user_and_notification_request_atomically() {
         // Given: tenant context is set
         TenantContextHolder.setContext(TenantContext.of(tenantAId));
-        org.hibernate.Session session = entityManager.unwrap(org.hibernate.Session.class);
-        org.hibernate.Filter filter = session.enableFilter("tenantFilter");
-        filter.setParameter("tenantId", tenantAId);
+        TenantIsolationAssertions.enableTenantFilter(entityManager, tenantAId);
 
         UserPreferences preferences = new UserPreferences(true, true);
 
@@ -128,8 +108,7 @@ class UserCreationIntegrationTest {
 
         // Then: user is saved
         TenantContextHolder.setContext(TenantContext.of(tenantAId));
-        filter = session.enableFilter("tenantFilter");
-        filter.setParameter("tenantId", tenantAId);
+        TenantIsolationAssertions.enableTenantFilter(entityManager, tenantAId);
         var foundUser = userEntityRepository.findById(user.id());
         assertThat(foundUser).isPresent();
         UserEntity userEntity = foundUser.get();
@@ -153,9 +132,7 @@ class UserCreationIntegrationTest {
     void should_enforce_tenant_isolation_when_creating_users() {
         // Given: create user for tenant A
         TenantContextHolder.setContext(TenantContext.of(tenantAId));
-        org.hibernate.Session session = entityManager.unwrap(org.hibernate.Session.class);
-        org.hibernate.Filter filter = session.enableFilter("tenantFilter");
-        filter.setParameter("tenantId", tenantAId);
+        TenantIsolationAssertions.enableTenantFilter(entityManager, tenantAId);
 
         UserPreferences preferences = new UserPreferences(true, false);
         User userA = createUserUseCase.execute(
@@ -171,8 +148,7 @@ class UserCreationIntegrationTest {
 
         // When: create user for tenant B
         TenantContextHolder.setContext(TenantContext.of(tenantBId));
-        filter = session.enableFilter("tenantFilter");
-        filter.setParameter("tenantId", tenantBId);
+        TenantIsolationAssertions.enableTenantFilter(entityManager, tenantBId);
 
         User userB = createUserUseCase.execute(
                 "tenantB@example.com",
@@ -187,8 +163,7 @@ class UserCreationIntegrationTest {
 
         // Then: querying tenant A only returns tenant A's user
         TenantContextHolder.setContext(TenantContext.of(tenantAId));
-        filter = session.enableFilter("tenantFilter");
-        filter.setParameter("tenantId", tenantAId);
+        TenantIsolationAssertions.enableTenantFilter(entityManager, tenantAId);
         List<UserEntity> tenantAUsers = userEntityRepository.findAll();
         assertThat(tenantAUsers).hasSize(1);
         assertThat(tenantAUsers.get(0).getEmail()).isEqualTo("tenantA@example.com");
@@ -196,8 +171,7 @@ class UserCreationIntegrationTest {
 
         // And: querying tenant B only returns tenant B's user
         TenantContextHolder.setContext(TenantContext.of(tenantBId));
-        filter = session.enableFilter("tenantFilter");
-        filter.setParameter("tenantId", tenantBId);
+        TenantIsolationAssertions.enableTenantFilter(entityManager, tenantBId);
         List<UserEntity> tenantBUsers = userEntityRepository.findAll();
         assertThat(tenantBUsers).hasSize(1);
         assertThat(tenantBUsers.get(0).getEmail()).isEqualTo("tenantB@example.com");

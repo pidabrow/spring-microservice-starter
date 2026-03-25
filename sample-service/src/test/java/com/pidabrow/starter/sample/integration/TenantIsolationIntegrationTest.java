@@ -4,6 +4,8 @@ import com.pidabrow.starter.common.tenant.TenantContext;
 import com.pidabrow.starter.common.tenant.TenantContextHolder;
 import com.pidabrow.starter.data.entity.Tenant;
 import com.pidabrow.starter.sample.MicroserviceStarterApplication;
+import com.pidabrow.starter.testing.AbstractIntegrationTest;
+import com.pidabrow.starter.testing.assertions.TenantIsolationAssertions;
 import com.pidabrow.starter.sample.entity.TestEntity;
 import com.pidabrow.starter.sample.repository.TestEntityRepository;
 import jakarta.persistence.EntityManager;
@@ -12,15 +14,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -34,22 +30,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * - Cross-tenant data access is not possible without explicitly changing tenant context
  */
 @SpringBootTest(classes = MicroserviceStarterApplication.class)
-@Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class TenantIsolationIntegrationTest {
-
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
-            .withDatabaseName("test_db")
-            .withUsername("test_user")
-            .withPassword("test_pass");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+class TenantIsolationIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private TestEntityRepository testEntityRepository;
@@ -63,12 +45,6 @@ class TenantIsolationIntegrationTest {
     private UUID tenantAId;
     private UUID tenantBId;
     
-    private void enableTenantFilter(UUID tenantId) {
-        org.hibernate.Session session = entityManager.unwrap(org.hibernate.Session.class);
-        org.hibernate.Filter filter = session.enableFilter("tenantFilter");
-        filter.setParameter("tenantId", tenantId);
-    }
-
     @BeforeEach
     void setUp() {
         TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
@@ -110,7 +86,7 @@ class TenantIsolationIntegrationTest {
 
         // When: querying with tenant A context
         TenantContextHolder.setContext(TenantContext.of(tenantAId));
-        enableTenantFilter(tenantAId);
+        TenantIsolationAssertions.enableTenantFilter(entityManager, tenantAId);
         List<TestEntity> tenantAEntities = testEntityRepository.findAll();
 
         // Then: only tenant A entities are returned
@@ -138,7 +114,7 @@ class TenantIsolationIntegrationTest {
 
         // When: querying with tenant B context
         TenantContextHolder.setContext(TenantContext.of(tenantBId));
-        enableTenantFilter(tenantBId);
+        TenantIsolationAssertions.enableTenantFilter(entityManager, tenantBId);
         List<TestEntity> tenantBEntities = testEntityRepository.findAll();
 
         // Then: only tenant B entities are returned, not tenant A
@@ -152,7 +128,7 @@ class TenantIsolationIntegrationTest {
     void should_not_find_entity_by_id_from_other_tenant_when_querying() {
         // Given: entity for tenant A
         TenantContextHolder.setContext(TenantContext.of(tenantAId));
-        enableTenantFilter(tenantAId);
+        TenantIsolationAssertions.enableTenantFilter(entityManager, tenantAId);
         TestEntity entityA = TestEntity.create("Entity A");
         testEntityRepository.save(entityA);
         UUID entityAId = entityA.getId();
@@ -162,7 +138,7 @@ class TenantIsolationIntegrationTest {
 
         // When: querying with tenant B context
         TenantContextHolder.setContext(TenantContext.of(tenantBId));
-        enableTenantFilter(tenantBId);
+        TenantIsolationAssertions.enableTenantFilter(entityManager, tenantBId);
         var foundEntity = testEntityRepository.findById(entityAId);
 
         // Then: entity is not found (filtered out by tenant isolation)
@@ -183,7 +159,7 @@ class TenantIsolationIntegrationTest {
 
         // When: querying with same tenant context
         TenantContextHolder.setContext(TenantContext.of(tenantAId));
-        enableTenantFilter(tenantAId);
+        TenantIsolationAssertions.enableTenantFilter(entityManager, tenantAId);
         var foundEntity = testEntityRepository.findById(entityAId);
 
         // Then: entity is found
@@ -209,7 +185,7 @@ class TenantIsolationIntegrationTest {
 
         // When: querying by name with tenant A context
         TenantContextHolder.setContext(TenantContext.of(tenantAId));
-        enableTenantFilter(tenantAId);
+        TenantIsolationAssertions.enableTenantFilter(entityManager, tenantAId);
         List<TestEntity> found = testEntityRepository.findByName("Common Name");
 
         // Then: only tenant A entity is returned

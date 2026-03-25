@@ -4,8 +4,10 @@ import com.pidabrow.starter.common.actor.ActorContextHolder;
 import com.pidabrow.starter.common.actor.SystemActor;
 import com.pidabrow.starter.common.tenant.TenantContext;
 import com.pidabrow.starter.common.tenant.TenantContextHolder;
-import com.pidabrow.starter.data.entity.Tenant;
 import com.pidabrow.starter.sample.MicroserviceStarterApplication;
+import com.pidabrow.starter.testing.AbstractIntegrationTest;
+import com.pidabrow.starter.testing.outbox.OutboxTestAssertions;
+import com.pidabrow.starter.testing.tenant.TenantTestFixtures;
 import com.pidabrow.starter.sample.application.usecase.CreateUserUseCase;
 import com.pidabrow.starter.sample.domain.user.User;
 import com.pidabrow.starter.sample.domain.user.UserPreferences;
@@ -23,15 +25,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.KafkaContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -60,28 +55,8 @@ import static org.awaitility.Awaitility.await;
                 "outbox.relay.poll-interval-ms=1000"
         }
 )
-@Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class OutboxIntegrationTest {
-
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
-            .withDatabaseName("test_db")
-            .withUsername("test_user")
-            .withPassword("test_pass");
-
-    @Container
-    static KafkaContainer kafka = new KafkaContainer(
-            DockerImageName.parse("confluentinc/cp-kafka:7.5.0")
-    );
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
-    }
+class OutboxIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private CreateUserUseCase createUserUseCase;
@@ -104,14 +79,7 @@ class OutboxIntegrationTest {
             return null;
         });
 
-        tx.execute(status -> {
-            Tenant tenant = Tenant.create("Outbox Test Tenant");
-            tenantId = tenant.getId();
-            entityManager.persist(tenant);
-            entityManager.flush();
-            entityManager.clear();
-            return null;
-        });
+        tenantId = TenantTestFixtures.persistTenant(entityManager, transactionManager, "Outbox Test Tenant");
     }
 
     @AfterEach
@@ -144,13 +112,8 @@ class OutboxIntegrationTest {
                 .toList();
         assertThat(messageTypes).contains("WELCOME_EMAIL_REQUEST", "NOTIFICATION_REQUESTED");
 
-        // All records should be PENDING
-        outboxRecords.forEach(record ->
-                assertThat(record.get("status")).isEqualTo("PENDING"));
-
-        // Tenant ID should match
-        outboxRecords.forEach(record ->
-                assertThat(record.get("tenant_id").toString()).isEqualTo(tenantId.toString()));
+        OutboxTestAssertions.assertAllRowsHaveStatus(outboxRecords, "PENDING");
+        OutboxTestAssertions.assertAllRowsHaveTenantId(outboxRecords, tenantId);
     }
 
     @Test
@@ -249,7 +212,7 @@ class OutboxIntegrationTest {
 
     private KafkaConsumer<String, String> createConsumer() {
         Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers());
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "outbox-test-" + UUID.randomUUID());
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
