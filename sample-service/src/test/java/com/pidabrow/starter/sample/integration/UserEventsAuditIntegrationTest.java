@@ -8,6 +8,7 @@ import com.pidabrow.starter.data.entity.AuditLog;
 import com.pidabrow.starter.data.entity.Tenant;
 import com.pidabrow.starter.data.repository.AuditLogRepository;
 import com.pidabrow.starter.sample.MicroserviceStarterApplication;
+import com.pidabrow.starter.testing.AbstractIntegrationTest;
 import com.pidabrow.starter.sample.application.usecase.CreateUserUseCase;
 import com.pidabrow.starter.sample.application.usecase.DeleteUserUseCase;
 import com.pidabrow.starter.sample.application.usecase.UpdateUserUseCase;
@@ -20,15 +21,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -45,22 +40,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * - All events correctly propagate tenantId to audit logs
  */
 @SpringBootTest(classes = MicroserviceStarterApplication.class)
-@Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class UserEventsAuditIntegrationTest {
-
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
-            .withDatabaseName("test_db")
-            .withUsername("test_user")
-            .withPassword("test_pass");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+class UserEventsAuditIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private CreateUserUseCase createUserUseCase;
@@ -87,7 +68,11 @@ class UserEventsAuditIntegrationTest {
     void setUp() {
         TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
         transactionTemplate.execute(status -> {
+            entityManager.createNativeQuery("DELETE FROM message_outbox").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM notification_requests").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM users").executeUpdate();
             entityManager.createNativeQuery("TRUNCATE TABLE audit_log").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM tenants").executeUpdate();
             entityManager.flush();
             entityManager.clear();
             return null;

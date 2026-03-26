@@ -4,8 +4,9 @@ import com.pidabrow.starter.common.correlation.CorrelationContext;
 import com.pidabrow.starter.common.correlation.CorrelationContextHolder;
 import com.pidabrow.starter.common.tenant.TenantContext;
 import com.pidabrow.starter.common.tenant.TenantContextHolder;
-import com.pidabrow.starter.data.entity.Tenant;
 import com.pidabrow.starter.sample.MicroserviceStarterApplication;
+import com.pidabrow.starter.testing.AbstractIntegrationTest;
+import com.pidabrow.starter.testing.tenant.TenantTestFixtures;
 import com.pidabrow.starter.sample.application.usecase.RegisterUserUseCase;
 import com.pidabrow.starter.sample.domain.user.User;
 import com.pidabrow.starter.sample.domain.user.UserAlreadyExistsException;
@@ -21,10 +22,8 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -41,20 +40,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 @SpringBootTest(classes = MicroserviceStarterApplication.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Testcontainers
-class UserRegistrationIntegrationTest {
-
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
-            .withDatabaseName("testdb")
-            .withUsername("test")
-            .withPassword("test");
+class UserRegistrationIntegrationTest extends AbstractIntegrationTest {
 
     @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
+    static void registerOutboxForRegistrationTests(DynamicPropertyRegistry registry) {
         registry.add("outbox.enabled", () -> "true");
     }
 
@@ -71,21 +60,27 @@ class UserRegistrationIntegrationTest {
     @Autowired
     private TransactionTemplate transactionTemplate;
 
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+
     private UUID tenantId;
     private UUID correlationId;
 
     @BeforeEach
     void setUp() {
         correlationId = UUID.randomUUID();
-        
-        // Create tenant and get its ID
-        Tenant tenant = transactionTemplate.execute(status -> {
-            Tenant t = Tenant.create("Test Tenant");
-            entityManager.persist(t);
-            return t;
+
+        transactionTemplate.execute(status -> {
+            entityManager.createNativeQuery("DELETE FROM message_outbox").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM notification_requests").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM users").executeUpdate();
+            entityManager.createNativeQuery("TRUNCATE TABLE audit_log").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM tenants").executeUpdate();
+            return null;
         });
-        tenantId = tenant.getId();
-        
+
+        tenantId = TenantTestFixtures.persistTenant(entityManager, transactionManager, "Test Tenant");
+
         TenantContextHolder.setContext(TenantContext.of(tenantId));
         CorrelationContextHolder.setContext(CorrelationContext.of(correlationId));
     }
@@ -94,8 +89,9 @@ class UserRegistrationIntegrationTest {
     void tearDown() {
         transactionTemplate.execute(status -> {
             entityManager.createNativeQuery("DELETE FROM message_outbox").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM notification_requests").executeUpdate();
             userEntityRepository.deleteAll();
-            entityManager.createQuery("DELETE FROM Tenant").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM tenants").executeUpdate();
             return null;
         });
         TenantContextHolder.clearContext();
@@ -162,19 +158,8 @@ class UserRegistrationIntegrationTest {
     @DisplayName("Should allow same email for different tenants")
     void should_allow_same_email_for_different_tenants() {
         // Given
-        Tenant tenant1Entity = transactionTemplate.execute(status -> {
-            Tenant t = Tenant.create("Tenant 1");
-            entityManager.persist(t);
-            return t;
-        });
-        UUID tenant1 = tenant1Entity.getId();
-        
-        Tenant tenant2Entity = transactionTemplate.execute(status -> {
-            Tenant t = Tenant.create("Tenant 2");
-            entityManager.persist(t);
-            return t;
-        });
-        UUID tenant2 = tenant2Entity.getId();
+        UUID tenant1 = TenantTestFixtures.persistTenant(entityManager, transactionManager, "Tenant 1");
+        UUID tenant2 = TenantTestFixtures.persistTenant(entityManager, transactionManager, "Tenant 2");
 
         // When
         TenantContextHolder.setContext(TenantContext.of(tenant1));
