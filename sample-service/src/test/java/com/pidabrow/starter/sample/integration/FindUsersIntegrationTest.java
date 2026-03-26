@@ -63,6 +63,7 @@ class FindUsersIntegrationTest extends AbstractIntegrationTest {
             entityManager.createNativeQuery("DELETE FROM notification_requests").executeUpdate();
             entityManager.createNativeQuery("DELETE FROM users").executeUpdate();
             entityManager.createNativeQuery("TRUNCATE TABLE audit_log").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM tenants").executeUpdate();
             entityManager.flush();
             return null;
         });

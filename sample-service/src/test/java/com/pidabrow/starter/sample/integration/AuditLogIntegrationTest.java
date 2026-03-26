@@ -64,6 +64,7 @@ class AuditLogIntegrationTest extends AbstractIntegrationTest {
         TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
         transactionTemplate.execute(status -> {
             entityManager.createNativeQuery("TRUNCATE TABLE audit_log").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM tenants").executeUpdate();
             entityManager.flush();
             entityManager.clear();
             return null;

@@ -49,6 +49,13 @@ class TenantIsolationIntegrationTest extends AbstractIntegrationTest {
     void setUp() {
         TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
         transactionTemplate.execute(status -> {
+            entityManager.createNativeQuery("DELETE FROM test_entities").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM tenants").executeUpdate();
+            entityManager.flush();
+            entityManager.clear();
+            return null;
+        });
+        transactionTemplate.execute(status -> {
             // Create two tenants in a committed transaction so they are visible
             // to all subsequent @Transactional test methods
             Tenant tenantA = Tenant.create("Tenant A");

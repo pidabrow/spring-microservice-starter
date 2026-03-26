@@ -17,13 +17,13 @@ import java.util.stream.Stream;
  */
 public abstract class AbstractIntegrationTest {
 
-    protected static final PostgreSQLContainer<?> POSTGRES =
+    private static final PostgreSQLContainer<?> POSTGRES =
             new PostgreSQLContainer<>("postgres:15")
                     .withDatabaseName("test_db")
                     .withUsername("test_user")
                     .withPassword("test_pass");
 
-    protected static final KafkaContainer KAFKA =
+    private static final KafkaContainer KAFKA =
             new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.5.0"));
 
     static {

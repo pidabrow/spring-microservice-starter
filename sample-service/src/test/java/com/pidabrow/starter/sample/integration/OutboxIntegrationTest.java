@@ -74,6 +74,9 @@ class OutboxIntegrationTest extends AbstractIntegrationTest {
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
         tx.execute(status -> {
             entityManager.createNativeQuery("DELETE FROM message_outbox").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM notification_requests").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM users").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM tenants").executeUpdate();
             entityManager.flush();
             entityManager.clear();
             return null;
