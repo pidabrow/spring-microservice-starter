@@ -75,7 +75,11 @@ class UserUpdateDeleteIntegrationTest extends AbstractIntegrationTest {
     void setUp() {
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
         tx.execute(status -> {
+            entityManager.createNativeQuery("DELETE FROM message_outbox").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM notification_requests").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM users").executeUpdate();
             entityManager.createNativeQuery("TRUNCATE TABLE audit_log").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM tenants").executeUpdate();
             entityManager.flush();
             return null;
         });

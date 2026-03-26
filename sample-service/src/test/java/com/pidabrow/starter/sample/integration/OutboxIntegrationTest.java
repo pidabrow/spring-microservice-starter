@@ -165,11 +165,24 @@ class OutboxIntegrationTest extends AbstractIntegrationTest {
                     .until(() -> {
                         ConsumerRecords<String, String> polled = consumer.poll(Duration.ofMillis(500));
                         polled.forEach(receivedRecords::add);
-                        return receivedRecords.size() >= 2; // WELCOME_EMAIL_REQUEST + NOTIFICATION_REQUESTED
+                        return receivedRecords.stream()
+                                .filter(record -> {
+                                    Header tenantHeader = record.headers().lastHeader("x-tenant-id");
+                                    return tenantHeader != null
+                                            && new String(tenantHeader.value(), StandardCharsets.UTF_8).equals(tenantId.toString());
+                                })
+                                .count() >= 2; // WELCOME_EMAIL_REQUEST + NOTIFICATION_REQUESTED
                     });
 
             // Then: messages have correct headers
-            for (ConsumerRecord<String, String> record : receivedRecords) {
+            List<ConsumerRecord<String, String>> tenantRecords = receivedRecords.stream()
+                    .filter(record -> {
+                        Header tenantHeader = record.headers().lastHeader("x-tenant-id");
+                        return tenantHeader != null
+                                && new String(tenantHeader.value(), StandardCharsets.UTF_8).equals(tenantId.toString());
+                    })
+                    .toList();
+            for (ConsumerRecord<String, String> record : tenantRecords) {
                 Header tenantHeader = record.headers().lastHeader("x-tenant-id");
                 assertThat(tenantHeader).isNotNull();
                 assertThat(new String(tenantHeader.value(), StandardCharsets.UTF_8))
@@ -183,7 +196,7 @@ class OutboxIntegrationTest extends AbstractIntegrationTest {
             }
 
             // Verify partition key is the entity ID
-            receivedRecords.forEach(record ->
+            tenantRecords.forEach(record ->
                     assertThat(record.key()).isNotNull().isNotBlank());
         }
     }

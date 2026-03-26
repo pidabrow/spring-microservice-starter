@@ -69,9 +69,18 @@ class UserRegistrationIntegrationTest extends AbstractIntegrationTest {
     @BeforeEach
     void setUp() {
         correlationId = UUID.randomUUID();
-        
+
+        transactionTemplate.execute(status -> {
+            entityManager.createNativeQuery("DELETE FROM message_outbox").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM notification_requests").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM users").executeUpdate();
+            entityManager.createNativeQuery("TRUNCATE TABLE audit_log").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM tenants").executeUpdate();
+            return null;
+        });
+
         tenantId = TenantTestFixtures.persistTenant(entityManager, transactionManager, "Test Tenant");
-        
+
         TenantContextHolder.setContext(TenantContext.of(tenantId));
         CorrelationContextHolder.setContext(CorrelationContext.of(correlationId));
     }
@@ -80,8 +89,9 @@ class UserRegistrationIntegrationTest extends AbstractIntegrationTest {
     void tearDown() {
         transactionTemplate.execute(status -> {
             entityManager.createNativeQuery("DELETE FROM message_outbox").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM notification_requests").executeUpdate();
             userEntityRepository.deleteAll();
-            entityManager.createQuery("DELETE FROM Tenant").executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM tenants").executeUpdate();
             return null;
         });
         TenantContextHolder.clearContext();

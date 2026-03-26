@@ -2,11 +2,12 @@ package com.pidabrow.starter.testing;
 
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
+
+import java.util.stream.Stream;
 
 /**
  * Shared PostgreSQL + Kafka (singleton per JVM) for integration tests.
@@ -14,19 +15,20 @@ import org.testcontainers.utility.DockerImageName;
  * Subclasses inherit {@link DynamicPropertySource} wiring for {@code spring.datasource.*}
  * and {@code spring.kafka.bootstrap-servers}.
  */
-@Testcontainers
 public abstract class AbstractIntegrationTest {
 
-    @Container
     protected static final PostgreSQLContainer<?> POSTGRES =
             new PostgreSQLContainer<>("postgres:15")
                     .withDatabaseName("test_db")
                     .withUsername("test_user")
                     .withPassword("test_pass");
 
-    @Container
     protected static final KafkaContainer KAFKA =
             new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.5.0"));
+
+    static {
+        Startables.deepStart(Stream.of(POSTGRES, KAFKA)).join();
+    }
 
     @DynamicPropertySource
     static void registerDatasourceAndKafka(DynamicPropertyRegistry registry) {
