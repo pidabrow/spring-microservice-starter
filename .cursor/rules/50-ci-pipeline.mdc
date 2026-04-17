@@ -16,6 +16,10 @@ alwaysApply: true
 - A PR MUST NOT be merged unless all required CI checks pass.
 - Branch protection MUST enforce required status checks on the main branch.
 
+## Branch workflow (HARD)
+- Do **not** push commits directly to the protected default branch (`main`). Implement work on a **dedicated branch** created from `main` (for example `feature/…`, `fix/…`, or `chore/…`).
+- Open a PR from that branch into `main`. Treat the branch as the unit of review together with its PR.
+
 ## Local expectation (HARD where feasible)
 - Before pushing, ensure `./gradlew build` passes locally (unless not feasible due to environment limits).
 
