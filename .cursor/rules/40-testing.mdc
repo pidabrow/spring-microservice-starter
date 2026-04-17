@@ -40,6 +40,11 @@ Tests are mandatory unless explicitly exempted by change classification.
 - Fix flaky tests; never mute them
 - Prefer clarity over clever setups
 
+## Beyond happy path (HARD for BEHAVIOR_CHANGE)
+- **Success-only coverage is not enough.** Where the change introduces or affects behavior, tests MUST also cover **failure paths**, **validation errors**, and **denied / unauthorized** outcomes when those are part of the contract (for example: wrong input, missing tenant, forbidden action).
+- Add **boundary** or **edge** cases when they guard real domain or infrastructure rules (not speculative coverage).
+- Prefer naming that makes the scenario obvious (see Test Naming Convention below).
+
 ## Test Naming Convention
 - **Format**: Use `should_[expectedBehavior]_when_[condition]`.
 - **Snake Case**: Always use `snake_case` for test method names. It improves readability in test reports and IDEs.

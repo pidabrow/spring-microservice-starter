@@ -34,6 +34,7 @@ If uncertain, default to BEHAVIOR_CHANGE.
 - Code compiles
 - Relevant tests updated and passing (per testing rules)
 - CI pipeline passes
+- Git workflow and PR rules in `50-ci-pipeline` followed (dedicated branch, PR into `main`)
 - No weakening of existing rules or checks
 
 ---
