@@ -1,6 +1,9 @@
 spring:
   application:
     name: sample-service
+  mvc:
+    problemdetails:
+      enabled: true
   datasource:
     url: jdbc:postgresql://localhost:5432/starter_db
     username: starter_user

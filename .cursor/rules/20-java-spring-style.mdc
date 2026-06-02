@@ -16,6 +16,7 @@ alwaysApply: true
 - Use cases (inbound ports) contain orchestration and transactions
 - Outbound access only via ports (interfaces), implemented by adapters
 - Keep Spring annotations out of domain; prefer Spring in adapters/use cases wiring
+- Domain exceptions must extend `com.pidabrow.starter.common.exception.BusinessException` — `GlobalExceptionHandler` relies on this hierarchy for RFC 7807 mapping
 
 ## REST API
 - Use explicit request/response DTOs

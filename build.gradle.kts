@@ -1,7 +1,7 @@
 plugins {
     java
-    id("org.springframework.boot") version "3.2.0" apply false
-    id("io.spring.dependency-management") version "1.1.4" apply false
+    id("org.springframework.boot") version "3.5.3" apply false
+    id("io.spring.dependency-management") version "1.1.7" apply false
 }
 
 allprojects {
@@ -25,8 +25,10 @@ subprojects {
 
     dependencies {
         val testImplementation by configurations
-        
+        val testRuntimeOnly by configurations
+
         testImplementation("org.springframework.boot:spring-boot-starter-test")
+        testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     }
 
     the<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension>().apply {

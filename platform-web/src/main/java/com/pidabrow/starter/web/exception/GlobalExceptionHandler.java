@@ -1,91 +1,96 @@
 package com.pidabrow.starter.web.exception;
 
 import com.pidabrow.starter.common.exception.BusinessException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 /**
  * Global exception handler for REST controllers.
+ * Maps exceptions to RFC 7807 Problem Detail responses.
+ * <p>
+ * Extends {@link ResponseEntityExceptionHandler} to inherit standard Spring MVC
+ * exception handling in RFC 7807 format (enabled via {@code spring.mvc.problem-details.enabled=true}).
  */
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("status", HttpStatus.BAD_REQUEST.value());
-        
-        Map<String, String> errors = ex.getBindingResult().getFieldErrors().stream()
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex, HttpHeaders headers,
+            HttpStatusCode status, WebRequest request) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, "Validation failed");
+        problemDetail.setTitle("Validation Error");
+
+        Map<String, String> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.toMap(
                         FieldError::getField,
-                        fieldError -> fieldError.getDefaultMessage() != null ? fieldError.getDefaultMessage() : "Invalid value",
+                        fieldError -> fieldError.getDefaultMessage() != null
+                                ? fieldError.getDefaultMessage() : "Invalid value",
                         (existing, replacement) -> existing
                 ));
-        errorResponse.put("errors", errors);
-        errorResponse.put("message", "Validation failed");
-        
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
+        problemDetail.setProperty("fieldErrors", fieldErrors);
+        enrichWithTraceContext(problemDetail);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(problemDetail);
     }
 
     @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<Map<String, Object>> handleNoSuchElementException(NoSuchElementException ex) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("message", ex.getMessage());
-        errorResponse.put("status", HttpStatus.NOT_FOUND.value());
-
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(errorResponse);
+    public ProblemDetail handleNoSuchElementException(NoSuchElementException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND, ex.getMessage());
+        problemDetail.setTitle("Resource Not Found");
+        enrichWithTraceContext(problemDetail);
+        return problemDetail;
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("message", ex.getMessage());
-        errorResponse.put("status", HttpStatus.BAD_REQUEST.value());
-        
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
+    public ProblemDetail handleIllegalArgumentException(IllegalArgumentException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, ex.getMessage());
+        problemDetail.setTitle("Invalid Argument");
+        enrichWithTraceContext(problemDetail);
+        return problemDetail;
     }
 
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<Map<String, Object>> handleBusinessException(BusinessException ex) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("message", ex.getMessage());
-        errorResponse.put("status", HttpStatus.BAD_REQUEST.value());
-        
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
+    public ProblemDetail handleBusinessException(BusinessException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, ex.getMessage());
+        problemDetail.setTitle("Business Rule Violation");
+        enrichWithTraceContext(problemDetail);
+        return problemDetail;
     }
-    
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("message", "An unexpected error occurred");
-        errorResponse.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(errorResponse);
+    public ProblemDetail handleGenericException(Exception ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+        problemDetail.setTitle("Internal Server Error");
+        enrichWithTraceContext(problemDetail);
+        return problemDetail;
+    }
+
+    /**
+     * Enriches ProblemDetail with cross-cutting trace context.
+     * TODO(ADR-010): inject traceId from Micrometer/MDC when observability baseline is implemented.
+     * Expected: problemDetail.setProperty("traceId", MDC.get("traceId"));
+     */
+    private void enrichWithTraceContext(ProblemDetail problemDetail) {
+        // no-op until ADR-010 is implemented
     }
 }
