@@ -39,3 +39,6 @@ build/
 
 # Spring Boot
 *.pid
+
+# Claude Code — local session overrides (not committed)
+CLAUDE.local.md

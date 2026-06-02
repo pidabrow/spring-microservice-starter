@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":platform-data"))
     implementation(project(":platform-infrastructure"))
     implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-database-postgresql")
     implementation("com.github.java-json-tools:json-patch:1.13")
     
     testImplementation(testFixtures(project(":platform-testing")))
