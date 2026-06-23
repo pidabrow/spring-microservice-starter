@@ -42,3 +42,4 @@ build/
 
 # Claude Code — local session overrides (not committed)
 CLAUDE.local.md
+.claude/settings.local.json

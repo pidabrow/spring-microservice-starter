@@ -85,9 +85,35 @@ If no pack matches, default to `architecture.md` + the closest ADR.
 - **ArchUnit is non-negotiable.** After any structural change (new package, moved class, new module dependency), run `:sample-service:test` before finishing.
 - **Schema changes require an ADR.** If a change introduces a migration, stop and draft a new ADR first — don't write the migration ahead of the decision.
 - **ADRs are historical record.** Do not edit files in `docs/adr/` to reflect new decisions — write a new ADR that supersedes the old one.
-- **Branch hygiene.** Never commit directly to `main`. Work on `feature/…`, `fix/…`, or `chore/…` branches and land changes via PR with green CI (`50-ci-pipeline.mdc`).
 - **Ask before inventing architectural intent.** If `architecture.md` and the ADRs don't cover a decision, surface the gap rather than picking a direction silently.
 - **Prefer the narrowest verification loop** while iterating (`:<module>:test`), but always finish with `./gradlew build`.
+
+## Autonomy policy
+
+What Claude Code can do without asking, and what stays off-limits. The runtime enforcement is in `.claude/settings.json`; this section is the constitution.
+
+### Principles
+
+1. **Read freely, write deliberately.** Any read operation on the project tree is autonomous. Shell-based writes (outside `Edit`/`Write` tools) require explicit user approval.
+2. **Feature branches are sandboxes.** Push, commit, non-interactive rebase — all autonomous on `feature/*`, `fix/*`, `chore/*` branches. Anything touching `main` or `master` requires explicit approval. Never commit directly to `main`; land changes via PR with green CI (`.cursor/rules/50-ci-pipeline.mdc`).
+3. **Build and test loops are autonomous.** `./gradlew test`, `./gradlew build`, `./gradlew check` and their `:module:` variants run without confirmation. Diagnostic inspection (`find`, `grep`, `jar tf`, `unzip -l`, ad-hoc `python3 -c`) is autonomous.
+4. **GitHub read and PR authorship are autonomous.** `gh pr create`, `gh pr checks`, `gh run view` — autonomous. PR **merge** and any release/repo lifecycle operation — never autonomous.
+
+### Hard rules (never, even if asked mid-session)
+
+- No `rm -rf`, no `sudo`, no `chmod 777`, no piped `curl`/`wget` to shell.
+- No `git push --force` in any form.
+- No push, merge, or branch-switch onto `main`/`master`.
+- No reading of secret files: `.env*`, private keys (`*.pem`, `*.key`, `id_rsa`, `id_ed25519`).
+- No `gh pr merge`, no `gh release`, no `gh repo create`/`delete`.
+
+If a session legitimately needs one of these (e.g., a destructive cleanup), the user runs it manually. Claude proposes the command, user executes.
+
+### Cross-references
+
+- Runtime enforcement: `.claude/settings.json`
+- Personal session overrides: `CLAUDE.local.md` (gitignored)
+- CI policy: `.cursor/rules/50-ci-pipeline.mdc`
 
 ---
 
