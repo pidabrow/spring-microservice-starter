@@ -2,7 +2,7 @@
 
 > Single source of truth for AI coding agents working in this repository. Read it in full before making non-trivial changes.
 >
-> This file is read natively by both **Claude Code** (as `CLAUDE.md`) and **Cursor** (Cursor treats a root-level `CLAUDE.md` the same way it treats `AGENTS.md`: always applied to every conversation, regardless of any rule-level configuration). There is no other rules file in this repository — do not reintroduce `.cursor/rules/*.mdc` or an `AGENTS.md` duplicate of this content.
+> This file is read natively by both **Claude Code** (as `CLAUDE.md`) and **Cursor**. Cursor's own docs state that a root-level `CLAUDE.md` is read the same way as `AGENTS.md` — always applied to every conversation, regardless of any rule-level configuration — and this is confirmed for the Cursor CLI (`cursor.com/docs/cli/using`) and Cursor's general Rules documentation (`cursor.com/help/customization/rules`). If you're relying on this in the Cursor IDE specifically, double-check **Cursor Settings → Rules** to confirm `CLAUDE.md` shows up as an applied rule for this workspace. There is no other rules file in this repository — do not reintroduce `.cursor/rules/*.mdc` or an `AGENTS.md` duplicate of this content.
 
 ## What this repo is
 
@@ -46,12 +46,12 @@ sample-service            Reference Spring Boot app wiring all platform modules;
 
 | Working on… | Read first |
 |---|---|
-| **Any** change (to declare classification: DOCS_ONLY / BUILD_ONLY / REFACTOR / BEHAVIOR_CHANGE) | [00 — Base Rules](#00--base-rules-change-classification) |
+| **Any** change (to declare classification: DOCS_ONLY / BUILD_ONLY / REFACTOR / BEHAVIOR_CHANGE) | [00 — Base Rules (HARD)](#00--base-rules-hard-change-classification) |
 | Adding modules, moving code between layers, hexagonal boundaries | [10 — Repository Structure](#10--repository-structure-hexagonal) |
 | Writing Java/Spring code (records, sealed types, constructor injection, REST) | [20 — Java & Spring Boot Standards](#20--java--spring-boot-standards) |
 | JPA entities, repositories, migrations, tenancy, CQRS projections | [30 — Data & JPA Rules](#30--data--jpa-rules) |
 | Writing or modifying tests | [40 — Testing Policy](#40--testing-policy) |
-| `.github/workflows/`, Gradle pipeline, before creating a PR | [50 — CI / Pipeline Rules](#50--ci--pipeline-rules) |
+| `.github/workflows/`, Gradle pipeline, before creating a PR | [50 — CI / Pipeline Rules (HARD)](#50--ci--pipeline-rules-hard) |
 | Auth, crypto, logging of PII, secrets handling | [60 — Security & Privacy Rules](#60--security--privacy-rules) |
 
 If no section matches, default to `architecture.md` + the closest ADR.
@@ -81,7 +81,7 @@ If no section matches, default to `architecture.md` + the closest ADR.
 
 ## Working agreements
 
-- **Declare change classification upfront** per [00 — Base Rules](#00--base-rules-change-classification) before writing code: `DOCS_ONLY`, `BUILD_ONLY`, `REFACTOR`, or `BEHAVIOR_CHANGE`. Tests are mandatory unless the classification explicitly exempts them ([40 — Testing Policy](#40--testing-policy)).
+- **Declare change classification upfront** per [00 — Base Rules (HARD)](#00--base-rules-hard-change-classification) before writing code: `DOCS_ONLY`, `BUILD_ONLY`, `REFACTOR`, or `BEHAVIOR_CHANGE`. Tests are mandatory unless the classification explicitly exempts them ([40 — Testing Policy](#40--testing-policy)).
 - **ArchUnit is non-negotiable.** After any structural change (new package, moved class, new module dependency), run `:sample-service:test` before finishing.
 - **Schema changes require an ADR.** If a change introduces a migration, stop and draft a new ADR first — don't write the migration ahead of the decision.
 - **ADRs are historical record.** Do not edit files in `docs/adr/` to reflect new decisions — write a new ADR that supersedes the old one.
@@ -90,7 +90,7 @@ If no section matches, default to `architecture.md` + the closest ADR.
 
 ---
 
-# 00 — Base Rules (Change Classification)
+# 00 — Base Rules (HARD, Change Classification)
 
 ## Source of truth
 - Read and follow `/architecture.md`
@@ -116,7 +116,7 @@ If uncertain, default to BEHAVIOR_CHANGE.
 - Code compiles
 - Relevant tests updated and passing (per [40 — Testing Policy](#40--testing-policy))
 - CI pipeline passes
-- Git workflow and PR rules in [50 — CI / Pipeline Rules](#50--ci--pipeline-rules) followed (dedicated branch, PR into `main`)
+- Git workflow and PR rules in [50 — CI / Pipeline Rules (HARD)](#50--ci--pipeline-rules-hard) followed (dedicated branch, PR into `main`)
 - No weakening of existing rules or checks
 
 ## Failure handling
@@ -289,7 +289,7 @@ Tests are mandatory unless explicitly exempted by change classification.
 
 ---
 
-# 50 — CI / Pipeline Rules
+# 50 — CI / Pipeline Rules (HARD)
 
 ## Absolute rules
 - CI MUST be green after every change.
@@ -345,7 +345,7 @@ What an AI coding agent can do without asking, and what stays off-limits in this
 ### Principles
 
 1. **Read freely, write deliberately.** Any read operation on the project tree is autonomous. Shell-based writes (outside `Edit`/`Write` tools) require explicit user approval.
-2. **Feature branches are sandboxes.** Push, commit, non-interactive rebase — all autonomous on `feature/*`, `fix/*`, `chore/*` branches. Anything touching `main` or `master` requires explicit approval. Never commit directly to `main`; land changes via PR with green CI ([50 — CI / Pipeline Rules](#50--ci--pipeline-rules)).
+2. **Feature branches are sandboxes.** Push, commit, non-interactive rebase — all autonomous on `feature/*`, `fix/*`, `chore/*` branches. Anything touching `main` or `master` requires explicit approval. Never commit directly to `main`; land changes via PR with green CI ([50 — CI / Pipeline Rules (HARD)](#50--ci--pipeline-rules-hard)).
 3. **Build and test loops are autonomous.** `./gradlew test`, `./gradlew build`, `./gradlew check` and their `:module:` variants run without confirmation. Diagnostic inspection (`find`, `grep`, `jar tf`, `unzip -l`, ad-hoc `python3 -c`) is autonomous.
 4. **GitHub read and PR authorship are autonomous.** `gh pr create`, `gh pr checks`, `gh run view` — autonomous. PR **merge** and any release/repo lifecycle operation — never autonomous.
 
@@ -362,7 +362,7 @@ If a session legitimately needs one of these (e.g., a destructive cleanup), the 
 ### Cross-references
 
 - Claude Code runtime enforcement: `.claude/settings.json`
-- Cursor CLI runtime enforcement (best-effort mirror, different token syntax): `.cursor/cli.json`
+- Cursor CLI runtime enforcement: `.cursor/cli.json` — a **best-effort convenience mirror**, not a security boundary. Known deltas vs. `.claude/settings.json`: Cursor's `Shell(...)` token only matches on the first token of the command plus an optional `command:argsGlob` suffix (no multi-word prefix matching like Claude's `Bash(git status:*)`), so subcommand-level allow/deny is approximate, not exact; there is no `Edit` token (covered by `Write`); there is no `additionalDirectories` equivalent. The deny entries for destructive/branch-unsafe git operations have **not** been behaviorally verified against `cursor-agent` (not installable in this sandbox — see PR discussion) — treat them as best-effort until manually confirmed. The actual boundary protecting `main` is GitHub branch protection ([50 — CI / Pipeline Rules (HARD)](#50--ci--pipeline-rules-hard)), not this file.
 - Skills (shared by Cursor and Claude Code): `.claude/skills/`
 - Personal session overrides: `CLAUDE.local.md` (gitignored)
 

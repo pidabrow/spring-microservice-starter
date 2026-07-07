@@ -9,7 +9,7 @@ The authoritative testing policy for this repo is `CLAUDE.md`, section [40 — T
 
 ## Workflow
 
-1. **Establish change classification** per `CLAUDE.md`, section [00 — Base Rules](../../../CLAUDE.md#00--base-rules-change-classification): `DOCS_ONLY`, `BUILD_ONLY`, `REFACTOR`, or `BEHAVIOR_CHANGE`. The classification decides whether tests are required and which exceptions apply.
+1. **Establish change classification** per `CLAUDE.md`, section [00 — Base Rules](../../../CLAUDE.md#00--base-rules-hard-change-classification): `DOCS_ONLY`, `BUILD_ONLY`, `REFACTOR`, or `BEHAVIOR_CHANGE`. The classification decides whether tests are required and which exceptions apply.
 2. **Read the "40 — Testing Policy" section of `CLAUDE.md` end-to-end.** Do not summarise from memory — read the file.
 3. **Apply the policy** to the change at hand. When the policy and the request conflict, surface the conflict; do not paper over it.
 
