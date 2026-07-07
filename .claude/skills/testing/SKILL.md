@@ -1,16 +1,16 @@
 ---
 name: testing
-description: Testing policy, workflow, and commands for this Spring Boot 3 / Java 21 monorepo. Use when writing, modifying, or auditing tests — unit tests, integration tests with Testcontainers, or ArchUnit tests. Also use when classifying a change (DOCS_ONLY, BUILD_ONLY, REFACTOR, BEHAVIOR_CHANGE) to determine whether tests are required. Authoritative testing policy lives in .cursor/rules/40-testing.mdc; this skill points there and adds tactics that belong to the terminal workflow (commands, fixture locations, ArchUnit execution in :sample-service:test).
+description: Testing policy, workflow, and commands for this Spring Boot 3 / Java 21 monorepo. Use when writing, modifying, or auditing tests — unit tests, integration tests with Testcontainers, or ArchUnit tests. Also use when classifying a change (DOCS_ONLY, BUILD_ONLY, REFACTOR, BEHAVIOR_CHANGE) to determine whether tests are required. Authoritative testing policy lives in CLAUDE.md (section "40 — Testing Policy"); this skill points there and adds tactics that belong to the terminal workflow (commands, fixture locations, ArchUnit execution in :sample-service:test).
 ---
 
 # Testing
 
-The authoritative testing policy for this repo is `.cursor/rules/40-testing.mdc`. **Read it in full before writing or modifying tests.** This skill delegates to that rule pack and adds terminal-workflow tactics not present in the rule itself.
+The authoritative testing policy for this repo is `CLAUDE.md`, section [40 — Testing Policy](../../../CLAUDE.md#40--testing-policy). **Read it in full before writing or modifying tests.** This skill delegates to that section and adds terminal-workflow tactics not present there.
 
 ## Workflow
 
-1. **Establish change classification** per `.cursor/rules/00-base.mdc`: `DOCS_ONLY`, `BUILD_ONLY`, `REFACTOR`, or `BEHAVIOR_CHANGE`. The classification decides whether tests are required and which exceptions apply.
-2. **Read `.cursor/rules/40-testing.mdc` end-to-end.** Do not summarise from memory — read the file.
+1. **Establish change classification** per `CLAUDE.md`, section [00 — Base Rules](../../../CLAUDE.md#00--base-rules-hard-change-classification): `DOCS_ONLY`, `BUILD_ONLY`, `REFACTOR`, or `BEHAVIOR_CHANGE`. The classification decides whether tests are required and which exceptions apply.
+2. **Read the "40 — Testing Policy" section of `CLAUDE.md` end-to-end.** Do not summarise from memory — read the file.
 3. **Apply the policy** to the change at hand. When the policy and the request conflict, surface the conflict; do not paper over it.
 
 ## Where test infrastructure lives
@@ -33,8 +33,8 @@ Iterate with the narrowest loop that proves the change. Before declaring a task 
 
 ## Before declaring a testing task done
 
-- Classification from `00-base.mdc` honoured (and stated in the summary).
-- Policy from `40-testing.mdc` followed for that classification.
+- Classification from `CLAUDE.md` section "00 — Base Rules" honoured (and stated in the summary).
+- Policy from `CLAUDE.md` section "40 — Testing Policy" followed for that classification.
 - Narrowest relevant test loop green.
 - For structural changes: `:sample-service:test` green (ArchUnit).
 - `./gradlew build` green.

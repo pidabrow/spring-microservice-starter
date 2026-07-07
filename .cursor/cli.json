@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "permissions": {
+    "allow": [
+      "Shell(./gradlew)",
+      "Shell(git)",
+      "Shell(gh)",
+
+      "Shell(find)",
+      "Shell(grep)",
+      "Shell(rg)",
+      "Shell(cat)",
+      "Shell(head)",
+      "Shell(tail)",
+      "Shell(ls)",
+      "Shell(wc)",
+      "Shell(tree)",
+      "Shell(file)",
+      "Shell(xargs)",
+
+      "Shell(jar:tf*)",
+      "Shell(unzip:-l*)",
+      "Shell(unzip:-p*)",
+      "Shell(python3:-c*)",
+      "Shell(echo)",
+      "Shell(sleep)",
+      "Shell(true)",
+      "Shell(false)",
+
+      "Read(**)",
+      "Write(**)"
+    ],
+    "deny": [
+      "Shell(rm)",
+      "Shell(sudo)",
+      "Shell(chmod)",
+      "Shell(curl:*| sh*)",
+      "Shell(curl:*|sh*)",
+      "Shell(curl:*| bash*)",
+      "Shell(curl:*|bash*)",
+      "Shell(wget:*| sh*)",
+      "Shell(wget:*|sh*)",
+      "Shell(wget:*| bash*)",
+      "Shell(wget:*|bash*)",
+
+      "Shell(git:*push*--force*)",
+      "Shell(git:*push*-f*)",
+      "Shell(git:*push*--force-with-lease*)",
+      "Shell(git:*push*main*)",
+      "Shell(git:*push*master*)",
+      "Shell(git:*reset*--hard*)",
+      "Shell(git:*clean*-fd*)",
+      "Shell(git:checkout main*)",
+      "Shell(git:checkout master*)",
+      "Shell(git:switch main*)",
+      "Shell(git:switch master*)",
+
+      "Shell(gh:*pr*merge*)",
+      "Shell(gh:*release*)",
+      "Shell(gh:*repo*delete*)",
+      "Shell(gh:*repo*create*)",
+
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/id_rsa)",
+      "Read(**/id_ed25519)"
+    ]
+  }
+}
