@@ -1,6 +1,8 @@
-# Claude Code — project context
+# CLAUDE.md — Project Rules & Context
 
-> Short entry point for [Claude Code](https://code.claude.com/docs). Does **not** duplicate `.cursor/rules`, `architecture.md`, or ADRs — it points at them.
+> Single source of truth for AI coding agents working in this repository. Read it in full before making non-trivial changes.
+>
+> This file is read natively by both **Claude Code** (as `CLAUDE.md`) and **Cursor** (Cursor treats a root-level `CLAUDE.md` the same way it treats `AGENTS.md`: always applied to every conversation, regardless of any rule-level configuration). There is no other rules file in this repository — do not reintroduce `.cursor/rules/*.mdc` or an `AGENTS.md` duplicate of this content.
 
 ## What this repo is
 
@@ -29,9 +31,9 @@ sample-service            Reference Spring Boot app wiring all platform modules;
 | Architecture overview (hexagonal, immutability, package-private adapters) | [`architecture.md`](architecture.md) |
 | Architectural decisions (ADR-001…ADR-011) | [`docs/adr/`](docs/adr/) |
 | Flow walkthroughs (e.g. transactional outbox) | [`docs/flows/`](docs/flows/) |
-| Cursor rule packs (project standards by topic) | [`.cursor/rules/*.mdc`](.cursor/rules/) |
+| Project rules, by topic | sections below (`00`–`60`) |
 
-**Conflict resolution:** `architecture.md` → relevant ADR → `.cursor/rules`.
+**Conflict resolution:** `architecture.md` → relevant ADR → this file.
 
 **Key ADRs to know by heart:**
 - ADR-005 — Lightweight Hexagonal Architecture (the architectural baseline)
@@ -40,21 +42,19 @@ sample-service            Reference Spring Boot app wiring all platform modules;
 - ADR-009 — Platform Testing Infrastructure (Testcontainers, fixtures, multi-tenancy)
 - ADR-011 — API Contract & Error Handling (RFC 7807, OpenAPI)
 
-## When to consult which rule pack
-
-`.cursor/rules/*.mdc` are not auto-loaded here. Before starting matching work, read the pack:
+## Which section to read first
 
 | Working on… | Read first |
 |---|---|
-| **Any** change (to declare classification: DOCS_ONLY / BUILD_ONLY / REFACTOR / BEHAVIOR_CHANGE) | `.cursor/rules/00-base.mdc` |
-| Adding modules, moving code between layers, hexagonal boundaries | `.cursor/rules/10-repo-structure.mdc` |
-| Writing Java/Spring code (records, sealed types, constructor injection, REST) | `.cursor/rules/20-java-spring-style.mdc` |
-| JPA entities, repositories, migrations, tenancy, CQRS projections | `.cursor/rules/30-data-jpa.mdc` |
-| Writing or modifying tests | `.cursor/rules/40-testing.mdc` |
-| `.github/workflows/`, Gradle pipeline, before creating a PR | `.cursor/rules/50-ci-pipeline.mdc` |
-| Auth, crypto, logging of PII, secrets handling | `.cursor/rules/60-security-privacy.mdc` |
+| **Any** change (to declare classification: DOCS_ONLY / BUILD_ONLY / REFACTOR / BEHAVIOR_CHANGE) | [00 — Base Rules](#00--base-rules-change-classification) |
+| Adding modules, moving code between layers, hexagonal boundaries | [10 — Repository Structure](#10--repository-structure-hexagonal) |
+| Writing Java/Spring code (records, sealed types, constructor injection, REST) | [20 — Java & Spring Boot Standards](#20--java--spring-boot-standards) |
+| JPA entities, repositories, migrations, tenancy, CQRS projections | [30 — Data & JPA Rules](#30--data--jpa-rules) |
+| Writing or modifying tests | [40 — Testing Policy](#40--testing-policy) |
+| `.github/workflows/`, Gradle pipeline, before creating a PR | [50 — CI / Pipeline Rules](#50--ci--pipeline-rules) |
+| Auth, crypto, logging of PII, secrets handling | [60 — Security & Privacy Rules](#60--security--privacy-rules) |
 
-If no pack matches, default to `architecture.md` + the closest ADR.
+If no section matches, default to `architecture.md` + the closest ADR.
 
 ## Local verification
 
@@ -76,26 +76,276 @@ If no pack matches, default to `architecture.md` + the closest ADR.
 - **Domain immutability:** strict — no setters, records or final fields, state changes return new instances
 - **No persistence leaking:** JPA entities are persistence-adapter internals; they never reach domain or application layers
 - **Package visibility:** adapter implementations are `package-private`; only ports and DTOs are public
-- **IDs:** UUID-based (see `.cursor/rules/30-data-jpa.mdc` / `architecture.md` for version specifics) — never expose sequential IDs in public APIs
+- **IDs:** UUID-based (see [30 — Data & JPA Rules](#30--data--jpa-rules) / `architecture.md` for version specifics) — never expose sequential IDs in public APIs
 - **Tenancy:** every entity except `Tenant` carries `tenantId`; tenant context is a security boundary resolved at the edge; **never** use ad-hoc `WHERE tenant_id = ?` for isolation — rely on the platform mechanism (ADR-002, ADR-006)
 
-## Working agreements for Claude
+## Working agreements
 
-- **Declare change classification upfront** per `00-base.mdc` before writing code: `DOCS_ONLY`, `BUILD_ONLY`, `REFACTOR`, or `BEHAVIOR_CHANGE`. Tests are mandatory unless the classification explicitly exempts them (`40-testing.mdc`).
+- **Declare change classification upfront** per [00 — Base Rules](#00--base-rules-change-classification) before writing code: `DOCS_ONLY`, `BUILD_ONLY`, `REFACTOR`, or `BEHAVIOR_CHANGE`. Tests are mandatory unless the classification explicitly exempts them ([40 — Testing Policy](#40--testing-policy)).
 - **ArchUnit is non-negotiable.** After any structural change (new package, moved class, new module dependency), run `:sample-service:test` before finishing.
 - **Schema changes require an ADR.** If a change introduces a migration, stop and draft a new ADR first — don't write the migration ahead of the decision.
 - **ADRs are historical record.** Do not edit files in `docs/adr/` to reflect new decisions — write a new ADR that supersedes the old one.
 - **Ask before inventing architectural intent.** If `architecture.md` and the ADRs don't cover a decision, surface the gap rather than picking a direction silently.
 - **Prefer the narrowest verification loop** while iterating (`:<module>:test`), but always finish with `./gradlew build`.
 
-## Autonomy policy
+---
 
-What Claude Code can do without asking, and what stays off-limits. The runtime enforcement is in `.claude/settings.json`; this section is the constitution.
+# 00 — Base Rules (Change Classification)
+
+## Source of truth
+- Read and follow `/architecture.md`
+- Architectural decisions live in `/docs/adr`
+- If a change conflicts with ADRs, propose an ADR update instead of coding around it
+
+## Change classification (MANDATORY)
+Every change MUST be classified as exactly one of:
+- DOCS_ONLY
+- BUILD_ONLY
+- REFACTOR
+- BEHAVIOR_CHANGE
+
+If uncertain, default to BEHAVIOR_CHANGE.
+
+## Non-negotiables
+- Keep changes minimal and focused
+- Prefer explicit, readable code over magic
+- Do not introduce new libraries/frameworks without an ADR
+- Do not add configuration-driven abstractions
+
+## Definition of Done (global)
+- Code compiles
+- Relevant tests updated and passing (per [40 — Testing Policy](#40--testing-policy))
+- CI pipeline passes
+- Git workflow and PR rules in [50 — CI / Pipeline Rules](#50--ci--pipeline-rules) followed (dedicated branch, PR into `main`)
+- No weakening of existing rules or checks
+
+## Failure handling
+- Never work around failing CI
+- Never disable tests or checks to make CI green
+
+---
+
+# 10 — Repository Structure (Hexagonal)
+
+## Modules
+- Sample service depends on platform modules
+- Platform modules must NEVER depend on the sample service
+- Avoid generic "utils/common" dumping grounds
+
+## Hexagonal boundaries (sample service)
+Organize code as Ports & Adapters:
+
+### Inbound adapters
+- `api` (REST controllers, request/response DTOs)
+
+### Inbound ports (application)
+- `application.port.in` (use case interfaces, if useful)
+- `application.usecase` (implementations, orchestration, transactions, event publishing)
+
+### Domain
+- `domain` (entities, domain rules; avoid Spring dependencies)
+
+### Outbound ports
+- `application.port.out` (persistence ports, audit ports, etc.)
+
+### Outbound adapters
+- `infrastructure.persistence` (JPA implementations)
+- `infrastructure.events` (listeners, event wiring)
+- `infrastructure.*` (external integrations)
+
+Rule:
+- Inbound ports must not depend on inbound adapters.
+- Domain must not depend on adapters.
+- Adapters depend inward; never the reverse.
+
+## Naming
+- Root package: `com.pidabrow.starter`
+- Avoid generic class names (`Application`, `ServiceImpl`, `Utils`)
+- Prefer descriptive names (`CreateUserUseCase`, `TenantContext`, `AuditEventListener`)
+
+## Documentation
+- New modules require an update to `/architecture.md`
+- **Architecture as Code**: Use ArchUnit to enforce these boundaries in every build.
+
+---
+
+# 20 — Java & Spring Boot Standards
+
+## Spring Boot & Java 21 baseline
+- Spring Boot 3.x, Java 21.
+- **Modern Java**: Use Pattern Matching for `switch`, Sealed Interfaces for domain events, and Records for DTOs/Value Objects.
+- Prefer constructor injection.
+- No field injection.
+
+## Hexagonal discipline
+- Controllers (inbound adapters) only: validation, mapping, calling inbound ports
+- Use cases (inbound ports) contain orchestration and transactions
+- Outbound access only via ports (interfaces), implemented by adapters
+- Keep Spring annotations out of domain; prefer Spring in adapters/use cases wiring
+- Domain exceptions must extend `com.pidabrow.starter.common.exception.BusinessException` — `GlobalExceptionHandler` relies on this hierarchy for RFC 7807 mapping
+
+## REST API
+- Use explicit request/response DTOs
+- Never expose JPA entities directly from controllers
+- **Error Handling**: Use `Result<T>` or `Either` pattern for business failures instead of throwing checked exceptions in the domain.
+- Keep error responses consistent and explicit
+
+## Avoid
+- Generic abstractions
+- Broad AOP
+- Persistence callbacks as business triggers
+- **Nulls**: Use `Optional` for return types; use `@NonNullApi` for packages.
+
+---
+
+# 30 — Data & JPA Rules
+
+## Immutability & State Management (L10 Standard)
+- **Domain Immutability**: Domain models MUST be immutable. State changes return new instances.
+- **No Public Setters**: JPA entities MUST NOT have public setters. Use purposeful business methods (e.g., `deactivate()`).
+- **Collections**: Always wrap collections in `Collections.unmodifiableList()` or similar when exposing them.
+- **Records for Projections**: Use Java Records for all read-only queries (CQRS light). Never stream entities to the application layer for read-only purposes.
+
+## Soft multi-tenancy
+- Every entity except `Tenant` MUST contain `tenantId`
+- Tenant isolation must NOT rely on joins
+- Tenant context is a security boundary
+
+## Hexagonal persistence
+- Application/use cases talk to persistence via outbound ports (interfaces)
+- JPA repositories live in outbound adapters (infrastructure.persistence)
+
+## Identity & Primary Keys (Strict UUID)
+- **UUID as Primary Key**: All entities MUST use `java.util.UUID` as their primary key. No `Long` or `Integer` IDs.
+- **UUID v7 (Time-Ordered)**: Use UUID v7 to prevent B-Tree fragmentation. This ensures that IDs are sequential in time, keeping database inserts fast while maintaining global uniqueness.
+- **No ID Enumeration**: Public APIs must never expose sequential IDs to prevent data scraping and ID enumeration attacks.
+- **Generation Strategy**: Prefer generating the ID in the domain layer or using a dedicated generator in the persistence adapter. The domain object should ideally be "born" with an ID.
+
+## JPA/Hibernate
+- Default fetch is LAZY
+- Avoid `cascade = ALL`
+- Avoid `@ManyToMany`
+- Keep entities persistence-focused; avoid leaking persistence into the domain model design
+
+## Auditing & Timestamps
+- **Database-Driven Timestamps**: `created_at` and `updated_at` MUST be managed by the database (e.g., `DEFAULT CURRENT_TIMESTAMP` and database triggers).
+- **JPA Synchronization**: Use Hibernate's `@Generated` annotation to ensure the persistence context is updated with database-generated timestamps after save/update.
+- **Audit Trail**: Do not rely on application-level clock for record-keeping integrity. The database server clock is the single source of truth.
+
+## Migrations
+- Use Flyway
+- Every schema change requires a migration
+
+---
+
+# 40 — Testing Policy
+
+## Global rule
+Tests are mandatory unless explicitly exempted by change classification.
+
+## DOCS_ONLY
+- No tests required
+- No production code changes allowed
+- CI must pass
+
+## BUILD_ONLY
+- Existing tests MUST pass
+- New tests optional unless runtime behavior changes
+
+## REFACTOR
+- Existing tests MUST pass
+- Do not delete tests
+- Add tests only if modified code was previously untested
+
+## BEHAVIOR_CHANGE (DEFAULT)
+- Tests are NON-NEGOTIABLE
+- Tests must fail before and pass after the change
+- Choose correct test level:
+  - Unit tests for domain/use case logic
+  - Integration tests for persistence, migrations, multi-tenancy
+  - Web tests for REST API changes
+
+## Test Types & Levels
+- **Domain/Use Case**: Unit tests (Socialized, focused on behavior).
+- **Persistence/Multi-tenancy**: Integration tests with Testcontainers.
+- **Architecture**: **ArchUnit tests** are mandatory to verify Hexagonal boundaries and Immutability rules.
+
+## Quality rules
+- Tests must be deterministic
+- Fix flaky tests; never mute them
+- Prefer clarity over clever setups
+
+## Beyond happy path (HARD for BEHAVIOR_CHANGE)
+- **Success-only coverage is not enough.** Where the change introduces or affects behavior, tests MUST also cover **failure paths**, **validation errors**, and **denied / unauthorized** outcomes when those are part of the contract (for example: wrong input, missing tenant, forbidden action).
+- Add **boundary** or **edge** cases when they guard real domain or infrastructure rules (not speculative coverage).
+- Prefer naming that makes the scenario obvious (see Test Naming Convention below).
+
+## Test Naming Convention
+- **Format**: Use `should_[expectedBehavior]_when_[condition]`.
+- **Snake Case**: Always use `snake_case` for test method names. It improves readability in test reports and IDEs.
+- **Example**: `should_deny_access_when_user_has_no_tenant_id()`.
+- **Avoid**: Prefixes like `test...` or overly formal `WHEN_..._THEN_...` unless the use case is extremely complex.
+- **Display Name**: For complex scenarios, use `@DisplayName("Descriptive sentence")` to explain the "why" behind the test.
+
+---
+
+# 50 — CI / Pipeline Rules
+
+## Absolute rules
+- CI MUST be green after every change.
+- Never weaken CI without an ADR.
+- Never merge broken CI.
+
+## Pull Request gating (HARD)
+- All changes MUST go through a Pull Request.
+- CI MUST run on `pull_request` events.
+- A PR MUST NOT be merged unless all required CI checks pass.
+- Branch protection MUST enforce required status checks on the main branch.
+
+## Branch workflow (HARD)
+- Do **not** push commits directly to the protected default branch (`main`). Implement work on a **dedicated branch** created from `main` (for example `feature/…`, `fix/…`, or `chore/…`).
+- Open a PR from that branch into `main`. Treat the branch as the unit of review together with its PR.
+
+## Local expectation (HARD where feasible)
+- Before pushing, ensure `./gradlew build` passes locally (unless not feasible due to environment limits).
+
+## If CI fails
+You MUST:
+1. Determine whether the failure is caused by your change.
+2. Fix it in the same PR/change set.
+
+## Not allowed
+- Disabling jobs.
+- Using `continue-on-error`.
+- Ignoring failing checks.
+
+---
+
+# 60 — Security & Privacy Rules
+
+## Secrets
+- Never commit secrets
+- Never hardcode credentials or tokens
+- Use environment variables for local and CI usage
+
+## PII & Logging
+- Do not log emails, tokens, or secrets
+- Audit logs must support masking of sensitive fields
+
+## Auth scaffolding
+- Keep auth minimal until defined by ADR
+- No insecure shortcuts or temporary bypasses
+
+---
+
+# Autonomy & Safety Principles
+
+What an AI coding agent can do without asking, and what stays off-limits in this repository. Runtime enforcement for Claude Code lives in `.claude/settings.json` and for Cursor CLI in `.cursor/cli.json`; this section is the constitution both should follow.
 
 ### Principles
 
 1. **Read freely, write deliberately.** Any read operation on the project tree is autonomous. Shell-based writes (outside `Edit`/`Write` tools) require explicit user approval.
-2. **Feature branches are sandboxes.** Push, commit, non-interactive rebase — all autonomous on `feature/*`, `fix/*`, `chore/*` branches. Anything touching `main` or `master` requires explicit approval. Never commit directly to `main`; land changes via PR with green CI (`.cursor/rules/50-ci-pipeline.mdc`).
+2. **Feature branches are sandboxes.** Push, commit, non-interactive rebase — all autonomous on `feature/*`, `fix/*`, `chore/*` branches. Anything touching `main` or `master` requires explicit approval. Never commit directly to `main`; land changes via PR with green CI ([50 — CI / Pipeline Rules](#50--ci--pipeline-rules)).
 3. **Build and test loops are autonomous.** `./gradlew test`, `./gradlew build`, `./gradlew check` and their `:module:` variants run without confirmation. Diagnostic inspection (`find`, `grep`, `jar tf`, `unzip -l`, ad-hoc `python3 -c`) is autonomous.
 4. **GitHub read and PR authorship are autonomous.** `gh pr create`, `gh pr checks`, `gh run view` — autonomous. PR **merge** and any release/repo lifecycle operation — never autonomous.
 
@@ -107,14 +357,15 @@ What Claude Code can do without asking, and what stays off-limits. The runtime e
 - No reading of secret files: `.env*`, private keys (`*.pem`, `*.key`, `id_rsa`, `id_ed25519`).
 - No `gh pr merge`, no `gh release`, no `gh repo create`/`delete`.
 
-If a session legitimately needs one of these (e.g., a destructive cleanup), the user runs it manually. Claude proposes the command, user executes.
+If a session legitimately needs one of these (e.g., a destructive cleanup), the user runs it manually. The agent proposes the command, the user executes.
 
 ### Cross-references
 
-- Runtime enforcement: `.claude/settings.json`
+- Claude Code runtime enforcement: `.claude/settings.json`
+- Cursor CLI runtime enforcement (best-effort mirror, different token syntax): `.cursor/cli.json`
+- Skills (shared by Cursor and Claude Code): `.claude/skills/`
 - Personal session overrides: `CLAUDE.local.md` (gitignored)
-- CI policy: `.cursor/rules/50-ci-pipeline.mdc`
 
 ---
 
-*Living document. Update when module layout or top-level conventions change; otherwise put detail in ADRs or rule packs.*
+*Living document. Update when module layout or top-level conventions change; otherwise put detail in ADRs.*

@@ -155,4 +155,4 @@ This project uses **ArchUnit** to ensure that:
 - Architecture entry point: `/architecture.md`
 - Architectural decisions: `/docs/adr`
 - **Integration testing (shared Testcontainers, fixtures):** `/docs/adr/ADR-009__platform-testing-infrastructure.md`
-- AI/Cursor coding rules: `/.cursor/rules/*.mdc`
+- AI agent rules (Claude Code + Cursor): `/CLAUDE.md`
