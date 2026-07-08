@@ -1,36 +1,36 @@
 # ADR-006 — Domain Events & Tenant-Aware Auditing (JSON Patch, AFTER_COMMIT)
 
-**Status:** Accepted  
+**Status:** Accepted
 **Date:** 2026-02-26
+**Decision-makers:** <!-- TODO: fill in — not stated in original ADR -->
+**Consulted:** <!-- TODO: fill in — not stated in original ADR -->
+**Informed:** <!-- TODO: fill in — not stated in original ADR -->
+**Related:** ADR-002 (Soft Multi-Tenancy), ADR-003 (Event-Driven Auditing Architecture), ADR-004 (Application Events vs JPA Interceptors), ADR-005 (Lightweight Hexagonal Architecture)
 
----
+## Context and Problem Statement
 
-## Context
+The system requires a reliable, explicit, and decoupled auditing mechanism aligned with ADR-002, ADR-003, ADR-004, and ADR-005.
 
-The system requires a reliable, explicit, and decoupled auditing mechanism aligned with:
+## Decision Drivers
 
-- ADR-002 — Soft Multi-Tenancy
-- ADR-003 — Event-Driven Auditing Architecture
-- ADR-004 — Application Events vs JPA Interceptors
-- ADR-005 — Lightweight Hexagonal Architecture
+- Respect tenant boundaries.
+- Capture actor identity (SYSTEM vs USER).
+- Capture the delta of changes.
+- Execute only after successful transaction commit.
+- Remain fully decoupled from domain logic.
 
-Auditing must:
+## Considered Options
 
-- Respect tenant boundaries
-- Capture actor identity (SYSTEM vs USER)
-- Capture the delta of changes
-- Execute only after successful transaction commit
-- Remain fully decoupled from domain logic
+- JPA Entity Listeners.
+- Hibernate Envers.
+- Immediate synchronous audit writes.
+- Domain Events + AFTER_COMMIT auditing model.
 
----
+## Decision Outcome
 
-## Decision
+Chosen option: "Domain Events + AFTER_COMMIT auditing model".
 
-We adopt a **Domain Events + AFTER_COMMIT auditing model**.
-
----
-
-## 1. Domain Events Model
+### 1. Domain Events Model
 
 - Introduce `DomainEvent` as a sealed interface in `platform-common`.
 - Domain events must be immutable Java Records.
@@ -54,9 +54,7 @@ For update events:
 
 Events must never expose JPA entities.
 
----
-
-## 2. Event Publishing
+### 2. Event Publishing
 
 - `DomainEventPublisher` defined as an outbound port in `platform-common`.
 - Spring-based adapter implemented in `platform-web`.
@@ -66,18 +64,13 @@ Events must never expose JPA entities.
 @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 ```
 
-### Rationale
+Rationale: Audit entries must only be written if the business transaction commits successfully. No "ghost" audit entries are allowed.
 
-Audit entries must only be written if the business transaction commits successfully.  
-No "ghost" audit entries are allowed.
-
----
-
-## 3. AuditLog Model (Append-Only)
+### 3. AuditLog Model (Append-Only)
 
 Create `AuditLog` entity in `platform-data`.
 
-### Fields
+Fields:
 
 - `id` (UUID, generated in application)
 - `tenantId` (mandatory)
@@ -90,7 +83,7 @@ Create `AuditLog` entity in `platform-data`.
 - `changes` (TEXT or JSONB, storing JSON Patch)
 - `created_at` (DB default `CURRENT_TIMESTAMP`)
 
-### Rules
+Rules:
 
 - `AuditLog` is append-only.
 - No public setters.
@@ -98,32 +91,21 @@ Create `AuditLog` entity in `platform-data`.
 - Protected no-args constructor for JPA.
 - No `updated_at` required (append-only model).
 
----
-
-## 4. Actor Context
+### 4. Actor Context
 
 Introduce identity boundary:
 
 - `ActorContext` (sealed interface)
     - `SystemActor`
     - `UserActor(UUID userId)`
-
 - `ActorContextHolder` (ThreadLocal)
 
-### MVP Actor Resolution
+MVP Actor Resolution:
 
 - `X-Actor-Type: SYSTEM | USER` (missing = SYSTEM)
 - `X-Actor-Id: <uuid>` required for USER
 
-### Important
-
-- Header-based resolution is MVP only.
-- JWT-based authentication will replace it in a future iteration.
-- Headers must never be trusted in production.
-
----
-
-## 5. Architectural Constraints
+### 5. Architectural Constraints
 
 - Domain events must not depend on Spring.
 - Domain events must not depend on JPA.
@@ -131,11 +113,9 @@ Introduce identity boundary:
 - Persistence and listeners reside in outbound adapters.
 - Application layer publishes events explicitly.
 
----
+### Consequences
 
-## Consequences
-
-### Positive
+**Positive**
 
 - Clear separation of concerns.
 - Explicit business intent.
@@ -143,10 +123,44 @@ Introduce identity boundary:
 - Safe execution after commit.
 - Meaningful use of Java 21 features (sealed types, records, pattern matching).
 
-### Trade-offs
+**Negative**
 
 - Slight increase in structural complexity.
 - In-process event handling may lose audit entries in crash scenarios.
+
+### Confirmation
+
+<!-- TODO: fill in — original ADR does not describe a confirmation/verification mechanism -->
+
+## Pros and Cons of the Options
+
+### JPA Entity Listeners
+
+- Bad, because of implicit behavior (rejected).
+
+### Hibernate Envers
+
+- Bad, because of tight coupling to persistence model (rejected).
+
+### Immediate synchronous audit writes
+
+- Bad, because it violates transactional integrity (rejected).
+
+### Domain Events + AFTER_COMMIT auditing model (chosen)
+
+- Good, because of clear separation of concerns.
+- Good, because of explicit business intent.
+- Good, because of tenant-aware audit trail.
+- Good, because of safe execution after commit.
+- Good, because of meaningful use of Java 21 features (sealed types, records, pattern matching).
+- Bad, because of a slight increase in structural complexity.
+- Bad, because in-process event handling may lose audit entries in crash scenarios.
+
+## Notes for AI
+
+- Header-based actor resolution (`X-Actor-Type` / `X-Actor-Id`) is MVP only; JWT-based authentication will replace it in a future iteration. Headers must never be trusted in production.
+
+## More Information
 
 ### Future Consideration — Transactional Outbox
 
@@ -156,11 +170,3 @@ To guarantee at-least-once delivery in case of crashes:
 - Process events asynchronously from the outbox.
 
 **Not implemented in this ADR.**
-
----
-
-## Alternatives Considered
-
-- JPA Entity Listeners — rejected (implicit behavior).
-- Hibernate Envers — rejected (tight coupling to persistence model).
-- Immediate synchronous audit writes — rejected (violates transactional integrity).  
