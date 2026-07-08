@@ -84,7 +84,7 @@ If no section matches, default to `architecture.md` + the closest ADR.
 - **Declare change classification upfront** per [00 — Base Rules (HARD)](#00--base-rules-hard-change-classification) before writing code: `DOCS_ONLY`, `BUILD_ONLY`, `REFACTOR`, or `BEHAVIOR_CHANGE`. Tests are mandatory unless the classification explicitly exempts them ([40 — Testing Policy](#40--testing-policy)).
 - **ArchUnit is non-negotiable.** After any structural change (new package, moved class, new module dependency), run `:sample-service:test` before finishing.
 - **Schema changes require an ADR.** If a change introduces a migration, stop and draft a new ADR first — don't write the migration ahead of the decision.
-- **ADRs are historical record.** Do not edit files in `docs/adr/` to reflect new decisions — write a new ADR that supersedes the old one.
+- **ADRs are historical record.** Do not edit files in `docs/adr/` to reflect new decisions — write a new ADR that supersedes the old one. Format-only migrations performed under the adr-format skill (`.claude/skills/adr-format/SKILL.md`) are exempt from this rule, provided the decision content is preserved exactly and only the structure changes.
 - **Ask before inventing architectural intent.** If `architecture.md` and the ADRs don't cover a decision, surface the gap rather than picking a direction silently.
 - **Prefer the narrowest verification loop** while iterating (`:<module>:test`), but always finish with `./gradlew build`.
 
