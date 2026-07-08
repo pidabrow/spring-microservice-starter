@@ -117,6 +117,16 @@ making any changes. This applies even when a task involves editing many files in
 create the branch once, at the very start, before the first file edit — do not wait until
 the work is done to discover you're still on `main`.
 
+**Branch from up-to-date main.** Before cutting the new branch, update local `main` first
+(`git checkout main && git pull`, or `git fetch origin && git reset --hard origin/main` on
+`main` only — never on a feature branch). Do not branch off a stale local `main`.
+
+**One branch, one task.** Do not reuse an already-existing feature branch for a new,
+unrelated task, even if it's still checked out from a previous step in the same session.
+Each distinct task gets its own branch cut from current `main`. Before starting a new task,
+switch back to `main`, pull latest, and only then create the next branch. Two unrelated
+changes must never land as sequential commits on the same branch.
+
 ## Non-negotiables
 - Keep changes minimal and focused
 - Prefer explicit, readable code over magic
