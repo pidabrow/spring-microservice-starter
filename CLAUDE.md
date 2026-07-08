@@ -30,6 +30,7 @@ sample-service            Reference Spring Boot app wiring all platform modules;
 |---|---|
 | Architecture overview (hexagonal, immutability, package-private adapters) | [`architecture.md`](architecture.md) |
 | Architectural decisions (ADR-001…ADR-011) | [`docs/adr/`](docs/adr/) |
+| ADR template & migration rules | [45 — ADR Policy](#45--adr-policy) |
 | Flow walkthroughs (e.g. transactional outbox) | [`docs/flows/`](docs/flows/) |
 | Project rules, by topic | sections below (`00`–`60`) |
 
@@ -51,6 +52,7 @@ sample-service            Reference Spring Boot app wiring all platform modules;
 | Writing Java/Spring code (records, sealed types, constructor injection, REST) | [20 — Java & Spring Boot Standards](#20--java--spring-boot-standards) |
 | JPA entities, repositories, migrations, tenancy, CQRS projections | [30 — Data & JPA Rules](#30--data--jpa-rules) |
 | Writing or modifying tests | [40 — Testing Policy](#40--testing-policy) |
+| Writing a new ADR or migrating an existing one to the canonical format | [45 — ADR Policy](#45--adr-policy) |
 | `.github/workflows/`, Gradle pipeline, before creating a PR | [50 — CI / Pipeline Rules (HARD)](#50--ci--pipeline-rules-hard) |
 | Auth, crypto, logging of PII, secrets handling | [60 — Security & Privacy Rules](#60--security--privacy-rules) |
 
@@ -286,6 +288,54 @@ Tests are mandatory unless explicitly exempted by change classification.
 - **Example**: `should_deny_access_when_user_has_no_tenant_id()`.
 - **Avoid**: Prefixes like `test...` or overly formal `WHEN_..._THEN_...` unless the use case is extremely complex.
 - **Display Name**: For complex scenarios, use `@DisplayName("Descriptive sentence")` to explain the "why" behind the test.
+
+---
+
+# 45 — ADR Policy
+
+## Canonical template
+
+Every ADR in `docs/adr/` must follow this structure:
+
+```
+# ADR-{NNN} — {Title}
+
+**Status:** {Proposed | Accepted | Rejected | Deprecated | Superseded by ADR-XXX}
+**Date:** {YYYY-MM-DD}
+**Decision-makers:** {who}
+**Consulted:** {optional}
+**Informed:** {optional}
+**Related:** {ADR-XXX, files, rules}
+
+## Context and Problem Statement
+## Decision Drivers
+## Considered Options
+## Decision Outcome
+### Consequences
+**Positive** / **Negative**
+### Confirmation
+## Pros and Cons of the Options
+## Notes for AI
+## More Information
+```
+
+## Hard rules for migration
+
+1. **Never fabricate content.** If the original ADR does not contain enough information to
+   fill a section (Decision Drivers, Considered Options, Confirmation, per-option Pros/Cons,
+   Related, Decision-makers), leave an HTML comment placeholder:
+   `<!-- TODO: fill in — [what's missing] -->`
+   Do not infer business rationale, stakeholders, or test names that aren't stated or
+   directly implied by the original text.
+2. **Preserve the original decision content exactly.** Reformatting must not change what
+   was decided — only how it's structured. Implementation-detail bullets that read as
+   conventions/gotchas for a coding agent (not architectural facts) should be moved into
+   `## Notes for AI` rather than duplicated in `Decision`.
+3. **One file per turn.** Migrate exactly one ADR file, then stop and show the full diff.
+   Do not proceed to the next file and do not write/commit until the user explicitly approves.
+4. **All content in English**, including TODO comments, even if the source ADR (or the
+   conversation invoking this rule) is in another language.
+5. **Do not touch file names or ADR numbers.** Only the internal structure changes.
 
 ---
 
