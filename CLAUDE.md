@@ -108,6 +108,25 @@ Every change MUST be classified as exactly one of:
 
 If uncertain, default to BEHAVIOR_CHANGE.
 
+## Branch pre-flight (MANDATORY)
+
+Before creating, editing, or deleting any file — even for a single-file or `DOCS_ONLY`
+change — check the current branch (`git branch --show-current`). If it is `main` or
+`master`, stop and create + checkout a new branch (`feature/*`, `fix/*`, `chore/*`) before
+making any changes. This applies even when a task involves editing many files in sequence:
+create the branch once, at the very start, before the first file edit — do not wait until
+the work is done to discover you're still on `main`.
+
+**Branch from up-to-date main.** Before cutting the new branch, update local `main` first
+(`git checkout main && git pull`, or `git fetch origin && git reset --hard origin/main` on
+`main` only — never on a feature branch). Do not branch off a stale local `main`.
+
+**One branch, one task.** Do not reuse an already-existing feature branch for a new,
+unrelated task, even if it's still checked out from a previous step in the same session.
+Each distinct task gets its own branch cut from current `main`. Before starting a new task,
+switch back to `main`, pull latest, and only then create the next branch. Two unrelated
+changes must never land as sequential commits on the same branch.
+
 ## Non-negotiables
 - Keep changes minimal and focused
 - Prefer explicit, readable code over magic
@@ -355,6 +374,13 @@ Every ADR in `docs/adr/` must follow this structure:
 ## Branch workflow (HARD)
 - Do **not** push commits directly to the protected default branch (`main`). Implement work on a **dedicated branch** created from `main` (for example `feature/…`, `fix/…`, or `chore/…`).
 - Open a PR from that branch into `main`. Treat the branch as the unit of review together with its PR.
+
+## After pushing (HARD)
+
+After pushing a branch, wait for CI to complete and check the actual result — for example
+`gh pr checks --watch`, or by polling `gh run view` / `gh run list` until a conclusion is
+available. Report the real conclusion (success/failure) to the user. Never assume or state
+that CI passed without having actually checked.
 
 ## Local expectation (HARD where feasible)
 - Before pushing, ensure `./gradlew build` passes locally (unless not feasible due to environment limits).
