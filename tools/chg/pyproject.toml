@@ -1,0 +1,19 @@
+[project]
+name = "chg"
+version = "0.1.0"
+description = "Deterministic CLI behind the change delivery flow"
+requires-python = ">=3.11"
+dependencies = ["pydantic>=2.6", "PyYAML>=6.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+chg = "chg.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
