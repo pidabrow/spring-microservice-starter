@@ -76,7 +76,7 @@ artifact: spec
 type: feat
 version: 1
 status: draft
-persona: analityk
+persona: analyst
 links:
   issue: https://example.invalid/1
   branch: feat/GH-42-outbox-retry

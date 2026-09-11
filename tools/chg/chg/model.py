@@ -47,7 +47,7 @@ class Status(str, Enum):
 
 
 class Persona(str, Enum):
-    ANALITYK = "analityk"
+    ANALYST = "analyst"
     TESTER = "tester"
     DEVELOPER = "developer"
 
@@ -78,10 +78,10 @@ FIRST_ARTIFACT: dict[ChangeType, Artifact | None] = {
 
 #: Owner of each artifact. Personas write only their own output.
 OWNER: dict[Artifact, Persona | None] = {
-    Artifact.ANALYSIS: Persona.ANALITYK,
-    Artifact.DIAGNOSIS: Persona.ANALITYK,
-    Artifact.BRIEF: Persona.ANALITYK,
-    Artifact.SPEC: Persona.ANALITYK,
+    Artifact.ANALYSIS: Persona.ANALYST,
+    Artifact.DIAGNOSIS: Persona.ANALYST,
+    Artifact.BRIEF: Persona.ANALYST,
+    Artifact.SPEC: Persona.ANALYST,
     Artifact.TEST_PLAN: Persona.TESTER,
     Artifact.IMPLEMENTATION: Persona.DEVELOPER,
     Artifact.FINDINGS: Persona.DEVELOPER,
