@@ -1,0 +1,45 @@
+name: chg-lint
+
+# Structural contract for delivery artifacts. A prompt is a request;
+# this check is the contract. See docs/delivery/CONVENTION.md.
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # R5 and R7 need history
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install chg
+        run: pip install ./tools/chg
+
+      - name: Unit tests for chg
+        run: pip install pytest && python -m pytest tools/chg/tests -q
+
+      - name: Resolve workItemRef from the branch
+        id: ref
+        run: |
+          branch="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          ref="$(printf '%s' "$branch" | sed -nE 's#^(feat|fix|chore|spike)/([A-Z][A-Z0-9]*-[0-9]+)-.*$#\2#p')"
+          if [ -z "$ref" ]; then
+            echo "Branch '$branch' is not a change branch; skipping." >&2
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Lint the change
+        if: steps.ref.outputs.skip != 'true'
+        run: chg lint --strict "${{ steps.ref.outputs.ref }}"
