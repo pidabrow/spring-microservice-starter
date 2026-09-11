@@ -19,14 +19,14 @@ nobody (agent included) can tell whether they are synonyms.
 | Type of change | `feat`, `fix`, `chore`, `spike` |
 | Document produced in the flow | `analysis`, `diagnosis`, `brief`, `spec`, `test-plan`, `implementation`, `findings`, `evidence` |
 | Artifact state | `draft`, `approved` |
-| Role | `analityk`, `tester`, `developer` |
+| Role | `analyst`, `tester`, `developer` |
 
 ## Layout
 
 ```
 docs/changes/GH-42-outbox-retry/
-  analysis.md         analityk   context, questions and answers, out of scope
-  spec.md             analityk   requirements + acceptance criteria
+  analysis.md         analyst    context, questions and answers, out of scope
+  spec.md             analyst    requirements + acceptance criteria
   test-plan.md        tester     cases derived from the spec, BEFORE the code
   implementation.md   developer  execution note, deviations from the spec
   evidence/
@@ -70,7 +70,7 @@ artifact: spec
 type: feat
 version: 1
 status: draft
-persona: analityk
+persona: analyst
 links:
   issue: https://github.com/owner/repo/issues/42
   branch: feat/GH-42-outbox-retry
@@ -139,7 +139,7 @@ rather than silent.
 
 ```
 chg new --type feat --title "..."      issue -> workItemRef -> folder -> branch
-  analityk    -> analysis.md, spec.md        chg approve GH-42 spec
+  analyst     -> analysis.md, spec.md        chg approve GH-42 spec
   tester      -> test-plan.md                chg approve GH-42 test-plan
   developer   -> code + implementation.md
 chg evidence GH-42                     collect proof

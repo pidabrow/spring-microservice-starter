@@ -17,7 +17,7 @@ truth. Tool adapters in `.github/agents/` (Copilot) and `.claude/agents/`
 
 | Persona | Produces |
 | --- | --- |
-| `analityk` | `analysis.md` / `diagnosis.md` / `brief.md`, `spec.md` |
+| `analyst` | `analysis.md` / `diagnosis.md` / `brief.md`, `spec.md` |
 | `tester` | `test-plan.md` |
 | `developer` | code, `implementation.md` / `findings.md` |
 
